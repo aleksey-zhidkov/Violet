@@ -1,0 +1,223 @@
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.revwalk.RevCommit
+import org.eclipse.jgit.revwalk.RevWalk
+import org.eclipse.jgit.lib.Constants
+import org.eclipse.jgit.awtui.AwtCredentialsProvider
+
+apply plugin: 'java'
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/groups/public/' }
+    }
+
+    dependencies {
+        classpath 'org.eclipse.jgit:org.eclipse.jgit:2.0.0.201206130900-r',
+                'org.eclipse.jgit:org.eclipse.jgit.ui:2.0.0.201206130900-r'
+    }
+}
+
+final USER_HOME = System.properties['user.home']
+final BUILDS_DIR = 'builds'
+final RELEASES_DIR = 'releases'
+final REPOSITORY = "${USER_HOME}/Dropbox/personal/repository"
+final JAVA_VERSION = '1.6'
+final RC_ROBOTS_DIR = "${USER_HOME}/opt/rc/robots"
+final RCC_ROBOTS_DIR = "${USER_HOME}/opt/rcc/robots"
+
+project.ext.set('git', Git.open(file(projectDir)))
+project.ext.set('repository', git.repository)
+project.ext.set("RCC_ROBOTS_DIR", "${USER_HOME}/opt/rcc/robots")
+project.ext.set("VERSION_PROPERTIES_FILE", "version.properties")
+
+group = 'lxx'
+targetCompatibility = JAVA_VERSION
+sourceCompatibility = JAVA_VERSION
+
+buildDir = relativePath("${USER_HOME}/builds/${name}")
+
+def versionProps = versionProps()
+def major = versionProps['major']
+def minor = versionProps['minor']
+def build = versionProps['build']
+
+if (gradle.startParameter.taskNames.contains('releaseViolet')) {
+    version = "${major}.${minor.toInteger() + 1}" // todo: fix this hack
+
+    assertPreconditions("Release ", RELEASES_DIR)
+
+    if (!repository.branch.equals("master")) {
+        throw new GradleException("Release must be build from master branch!")
+    }
+} else {
+
+    version = "${major}.${minor}.${getBranchAcro()}.${build}"
+
+    if (gradle.startParameter.taskNames.contains('installViolet')) {
+        assertPreconditions("Build ", BUILDS_DIR)
+    }
+}
+
+jar.archiveName = "${group}.${name}_${version}.jar"
+
+repositories {
+    mavenCentral()
+
+    ivy {
+        url REPOSITORY
+        layout 'pattern', {
+            final artifactDir = '[organization]/[module]'
+            artifact "${artifactDir}/[artifact]-[revision].[ext]"
+            ivy "${artifactDir}/ivy.xml"
+        }
+
+    }
+
+}
+
+dependencies {
+    compile 'robocode:robocode:1.7.4.2'
+    compile 'junit:junit:4.11'
+}
+
+task generateProperties << {
+    
+    def violetProperties = file("${sourceSets.main.resources.srcDirs.iterator().next()}/lxx/${project.name}.properties")
+    if (!violetProperties.exists()) {
+        violetProperties.getParentFile().mkdirs()
+    }
+    def vpWriter = violetProperties.newWriter()
+    vpWriter << "robot.description=\n"
+    vpWriter << "robocode.version=1.7\n"
+    vpWriter << "robot.java.source.included=true\n"
+    vpWriter << "robot.version=${project.version}\n"
+    vpWriter << "robot.author.name=Aleksey Zhidkov\n"
+    vpWriter << "robot.classname=lxx.${project.name}\n"
+    vpWriter << "robot.name=${project.name}\n"
+    vpWriter.flush()
+    vpWriter.close()
+}
+
+processResources.doFirst {
+    project.copy {
+        from(sourceSets.main.java)
+        into(sourceSets.main.output.classesDir)
+    }
+}
+
+processResources.dependsOn generateProperties
+
+assemble << {
+    project.copy {
+        from jar.archivePath
+        into "${RC_ROBOTS_DIR}"
+    }
+}
+
+task installViolet(dependsOn: ':build') << {
+
+    copy(jar.archivePath, [RC_ROBOTS_DIR, RCC_ROBOTS_DIR, BUILDS_DIR])
+    build++
+    updateVersionProperties(major, minor,  build)
+    commitBuild("Build ${version}")
+}
+
+
+
+task releaseViolet(dependsOn: ':build') << {
+
+    copy(jar.archivePath, [RC_ROBOTS_DIR, RCC_ROBOTS_DIR, RELEASES_DIR])
+    minor = minor.toInteger() + 1
+    build = 0
+    updateVersionProperties(major, minor, build)
+    commitBuild("Release ${version}")
+    tagBuild()
+    pushMaster()
+
+}
+
+def assertPreconditions(def commitMessage, def buildDst) {
+    final rccFile = "${project.RCC_ROBOTS_DIR}/lxx.${project.name}_${version}.jar"
+    final buildDstFile = "${buildDst}/lxx.${project.name}_${version}.jar"
+    if (new File(buildDstFile).exists()) {
+        throw new GradleException("file ${buildDstFile} already exist")
+    }
+    if (new File(rccFile).exists()) {
+        throw new GradleException("file ${rccFile} already exist")
+    }
+
+    if (!git.status().call().isClean()) {
+        throw new GradleException("Repository is not clean!")
+    }
+
+    checkHeadCommit(commitMessage)
+}
+
+def checkHeadCommit(def messageStart) {
+    def RevWalk rw = new RevWalk(project.repository);
+    def headId = project.repository.resolve(Constants.HEAD)
+    def RevCommit commitHead = rw.parseCommit(headId);
+
+    if (commitHead.getFullMessage().startsWith(messageStart)) {
+        throw new GradleException('No commits detected');
+    }
+}
+
+def copy(def file, def dests) {
+
+    dests.each { dest ->
+        project.copy {
+            from file
+            into dest
+        }
+    }
+
+}
+
+def commitBuild(def msg) {
+    def addCmd = project.git.add()
+    addCmd.addFilepattern('.')
+    addCmd.call()
+
+    def commitCmd = project.git.commit()
+    commitCmd.setMessage(msg)
+    commitCmd.call()
+}
+
+def tagBuild() {
+    def tagCmd = project.git.tag()
+    tagCmd.setName(version)
+    tagCmd.call()
+}
+
+def pushMaster() {
+    def pushCmd = git.push()
+    pushCmd.setCredentialsProvider(new AwtCredentialsProvider())
+    pushCmd.add('master')
+    pushCmd.setPushTags()
+    pushCmd.setRemote('origin')
+    pushCmd.call()
+}
+
+def updateVersionProperties(major, minor, build) {
+    def versionPropertiesFile = file(VERSION_PROPERTIES_FILE)
+    versionPropertiesFile.write "major=${major}\n" +
+                                "minor=${minor}\n" +
+                                "build=${build}"
+}
+
+def getBranchAcro() {
+    def currentBranch = project.repository.branch
+    def branchAcro = ''
+    currentBranch.split('-').each { branchAcro += it.charAt(0).toLowerCase() }
+    branchAcro
+}
+
+def versionProps() {
+    def versionProps = new Properties()
+    file(VERSION_PROPERTIES_FILE).withReader { reader ->
+        versionProps.load(reader)
+    }
+    versionProps
+}
