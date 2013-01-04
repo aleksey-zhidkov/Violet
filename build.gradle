@@ -5,6 +5,7 @@ import org.eclipse.jgit.lib.Constants
 import org.eclipse.jgit.awtui.AwtCredentialsProvider
 
 apply plugin: 'java'
+apply plugin: 'groovy'
 
 buildscript {
     repositories {
@@ -79,6 +80,7 @@ repositories {
 dependencies {
     compile 'robocode:robocode:1.7.4.2'
     compile 'junit:junit:4.11'
+    groovy 'org.codehaus.groovy:groovy:2.0.5'
 }
 
 task generateProperties << {
