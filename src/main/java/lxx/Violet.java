@@ -5,20 +5,29 @@ import lxx.model.BattleStateFactory;
 import lxx.movement.WaveSurfingMovement;
 import lxx.movement.orbital.AvoidEnemyOrbitalMovement;
 import lxx.movement.orbital.OrbitalMovement;
+import lxx.paint.Canvas;
+import lxx.paint.LxxGraphics;
 import lxx.services.DangerService;
 import lxx.strategy.*;
 import lxx.utils.BattleRules;
-import robocode.AdvancedRobot;
-import robocode.Bullet;
-import robocode.Condition;
-import robocode.StatusEvent;
+import robocode.*;
+import robocode.Event;
 
 import java.awt.*;
+import java.awt.event.*;
+import java.awt.event.KeyEvent;
+import java.util.Vector;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
 public class Violet extends AdvancedRobot {
+
+    public static final Color primaryColor = new Color(40, 6, 78);
+    public static final Color secondaryColor = new Color(218, 177, 40);
+
+    public static final Color primaryColor155 = new Color(40, 6, 78, 155);
+    public static final Color secondaryColor155 = new Color(218, 177, 40, 155);
 
     private BattleState battleState;
     private BattleRules rules;
@@ -35,7 +44,7 @@ public class Violet extends AdvancedRobot {
             return;
         }
 
-        setColors(new Color(40, 6, 78), new Color(28, 4, 52), new Color(218, 177, 40),
+        setColors(primaryColor, new Color(28, 4, 52), secondaryColor,
                 new Color(141, 0, 207), new Color(141, 0, 207));
         setAdjustGunForRobotTurn(true);
         setAdjustRadarForGunTurn(true);
@@ -108,7 +117,23 @@ public class Violet extends AdvancedRobot {
             rules = new BattleRules(getBattleFieldWidth(), getBattleFieldHeight(), getWidth(),
                     getGunHeat(), getGunCoolingRate(), getEnergy(), getName());
         }
-        battleState = BattleStateFactory.updateState(rules, battleState, se.getStatus(), getAllEvents(), turnDecision);
+        final Vector<Event> allEvents = getAllEvents();
+        battleState = BattleStateFactory.updateState(rules, battleState, se.getStatus(), allEvents, turnDecision);
     }
 
+    @Override
+    public void onKeyReleased(KeyEvent e) {
+        if (e.getKeyChar() == 'w') {
+            Canvas.WS.switchEnabled();
+        }
+    }
+
+    @Override
+    public void onPaint(Graphics2D g) {
+        final LxxGraphics lg = new LxxGraphics(g);
+
+        for (Canvas c : Canvas.values()) {
+            c.exec(lg);
+        }
+    }
 }

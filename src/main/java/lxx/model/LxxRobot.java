@@ -154,12 +154,12 @@ public class LxxRobot implements APoint {
         position = (LxxPoint) original.project(heading, velocity);
         time = original.time + 1;
         round = original.round;
+        alive = original.alive;
 
         energy = NaN;
         lastScanTime = -1;
         radarHeading = null;
         gunHeading = null;
-        alive = false;
         firePower = NaN;
         gunHeat = NaN;
         acceleration = NaN;

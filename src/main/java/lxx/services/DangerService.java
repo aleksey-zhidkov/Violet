@@ -30,6 +30,15 @@ public class DangerService {
 
     public WaveDangerInfo getWaveDangerInfo(final LxxWave wave) {
 
+        if (wave.time > wave.launcher.time) {
+            return new WaveDangerInfo() {
+                @Override
+                public double getPointDanger(APoint pnt) {
+                    return LxxUtils.getRobotWidthInRadians(wave.launcher, pnt);
+                }
+            };
+        }
+
         return new WaveDangerInfo() {
             public double getPointDanger(APoint pnt) {
                 return 0;

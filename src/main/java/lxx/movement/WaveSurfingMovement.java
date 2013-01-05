@@ -1,15 +1,20 @@
 package lxx.movement;
 
+import lxx.Violet;
 import lxx.model.BattleState;
 import lxx.model.LxxRobot;
 import lxx.model.LxxWave;
 import lxx.movement.orbital.AvoidEnemyOrbitalMovement;
 import lxx.movement.orbital.OrbitDirection;
+import lxx.paint.Canvas;
+import lxx.paint.Circle;
+import lxx.paint.Text;
 import lxx.services.DangerService;
 import lxx.services.WaveDangerInfo;
 import lxx.utils.func.F3;
 import robocode.Rules;
 
+import java.awt.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -26,6 +31,7 @@ public class WaveSurfingMovement {
     private final AvoidEnemyOrbitalMovement orbitalMovement;
 
     private OrbitDirection lastOrbitDirection;
+    private Color pathColor;
 
     public WaveSurfingMovement(DangerService dangerService, AvoidEnemyOrbitalMovement orbitalMovement) {
         this.dangerService = dangerService;
@@ -35,11 +41,11 @@ public class WaveSurfingMovement {
     public MovementDecision getMovementDecision(BattleState bs) {
         final List<LxxWave> enemyBullets = bs.getEnemyBullets(bs.me, bs.enemy.alive ? 2 : 0, 2);
         if (bs.enemy.alive && enemyBullets.size() < 2) {
-            enemyBullets.add(new LxxWave(bs.enemy, bs.me, Rules.getBulletSpeed(3), bs.time));
+            enemyBullets.add(new LxxWave(bs.enemy, bs.me, Rules.getBulletSpeed(3), bs.time + 1));
         }
 
+        pathColor = Violet.primaryColor155;
         lastOrbitDirection = selectOrbitDirection(bs.me, bs.me, bs.enemy, enemyBullets, lastOrbitDirection).orbitDirection;
-
 
         return orbitalMovement.getMovementDecision(bs.me, enemyBullets.get(0), lastOrbitDirection, bs.enemy);
     }
@@ -66,7 +72,7 @@ public class WaveSurfingMovement {
             firstWaveFlightTimeLimit = 2;
         }
 
-        final DangerFunction firstWaveSameDirDF = new DangerFunction(dangerService.getWaveDangerInfo(firstWave), myRealState, 0.95);
+        final DangerFunction firstWaveSameDirDF = new DangerFunction(dangerService.getWaveDangerInfo(firstWave), myRealState, 0.98);
         final DangerFunction firstWaveAnotherDirDF = new DangerFunction(dangerService.getWaveDangerInfo(firstWave), myRealState, 1);
         final MovementOption[] options = new MovementOption[]{
                 predict(firstWave, me, enemy, firstWaveFlightTimeLimit, OrbitDirection.CLOCKWISE,
@@ -78,6 +84,8 @@ public class WaveSurfingMovement {
                 predict(firstWave, me, enemy, firstWaveFlightTimeLimit, OrbitDirection.COUNTER_CLOCKWISE,
                         lastOrbitDirection == OrbitDirection.COUNTER_CLOCKWISE ? firstWaveSameDirDF : firstWaveAnotherDirDF)
         };
+
+        pathColor = Violet.secondaryColor155;
 
         return selectBestOption(myRealState, enemy, secondWave, options);
     }
@@ -112,20 +120,20 @@ public class WaveSurfingMovement {
         final MovementDecision enemyMd = new MovementDecision(
                 enemy != null ? Rules.MAX_VELOCITY * signum(enemy.velocity) : 0, 0);
 
-        double minDist = 0;
-        try {
-            minDist = enemy != null ? me.distance(enemy) : Integer.MAX_VALUE;
-        } catch (NullPointerException e) {
-            // TODO: fixme
-            e.printStackTrace();
-        }
+        double minDist = enemy != null ? me.distance(enemy) : Integer.MAX_VALUE;
 
         do {
             final MovementDecision md = orbitalMovement.getMovementDecision(me, wave, orbitDirection, enemy);
             me = new LxxRobot(me, md.turnRate, md.desiredVelocity);
             if (enemy != null && enemy.alive) {
                 enemy = new LxxRobot(enemy, enemyMd.turnRate, enemyMd.desiredVelocity);
+                assert enemy.alive;
                 minDist = min(minDist, me.distance(enemy));
+            }
+
+            if (Canvas.WS.enabled()) {
+                Canvas.WS.draw(new Circle(me, 3, true), pathColor);
+                Canvas.WS.draw(new Circle(enemy, 3, true), pathColor);
             }
         } while ((wave.distance(me) - (me.time - wave.time) * wave.speed) / wave.speed > flightLimit);
 
@@ -134,7 +142,9 @@ public class WaveSurfingMovement {
     }
 
     private static double getDistDanger(double distBetween) {
-        if (distBetween < 400) {
+        if (distBetween < 50) {
+            return 500 / distBetween;
+        } if (distBetween < 400) {
             return 400 / (400 + Math.pow(Math.E, distBetween / 40)) + 0.01;
         } else if (distBetween < 1000) {
             return (1000 - distBetween) / 600 * 0.01;
@@ -171,7 +181,14 @@ public class WaveSurfingMovement {
         @Override
         public Double f(LxxRobot me, LxxWave wave, Double minDist) {
             final double distDng = getDistDanger(minDist);
-            return (waveDangerInfo.getPointDanger(me) / wave.getFlightTime(myRealState.position, myRealState.time) + 4 * distDng) * mult;
+            final double pointDanger = waveDangerInfo.getPointDanger(me);
+            final double flightTime = wave.getFlightTime(myRealState.position, myRealState.time);
+            if (Canvas.WS.enabled()) {
+                Canvas.WS.draw(
+                        new Text(List("distDng=" + distDng, "pntDng=" + pointDanger, "ft=" + flightTime),
+                                me.x() + 10, me.y() + 10), Color.RED);
+            }
+            return (pointDanger / flightTime + 4 * distDng) * mult;
         }
     }
 
