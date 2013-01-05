@@ -40,8 +40,8 @@ public class DangerService {
         }
 
         return new WaveDangerInfo() {
-            public double getPointDanger(APoint pnt) {
-                return 0;
+            public double getPointDanger(final APoint pnt) {
+                return DangerService.this.getPointDanger(wave, pnt, waveDangers.get(wave));
             }
         };
     }
