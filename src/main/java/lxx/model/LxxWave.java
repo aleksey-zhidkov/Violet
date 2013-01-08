@@ -1,8 +1,10 @@
 package lxx.model;
 
-import lxx.utils.APoint;
-import lxx.utils.Vector2D;
-import lxx.utils.LxxPoint;
+import lxx.utils.*;
+import robocode.util.Utils;
+
+import static java.lang.Math.abs;
+import static java.lang.Math.signum;
 
 public class LxxWave implements APoint {
 
@@ -72,6 +74,14 @@ public class LxxWave implements APoint {
         return getFlightTime(robot.position, robot.time);
     }
 
+    public double getBearingOffset(APoint pnt) {
+        final double bo = Utils.normalRelativeAngle(launcher.angleTo(pnt) - noBearingOffset);
+        if (abs(bo) > LxxUtils.getMaxEscapeAngle(speed)) {
+            assert abs(bo) <= LxxUtils.getMaxEscapeAngle(speed);
+        }
+        return bo;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -92,5 +102,9 @@ public class LxxWave implements APoint {
         result = 31 * result + (victim != null ? victim.hashCode() : 0);
         result = 31 * result + (int) (time ^ (time >>> 32));
         return result;
+    }
+
+    public boolean isPassed(LxxRobot robot) {
+        return launcher.distance(robot) < getTraveledDistance(robot.time);
     }
 }

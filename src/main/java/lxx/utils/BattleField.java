@@ -38,6 +38,7 @@ public class BattleField {
 
     public final int width;
     public final int height;
+    public final int fieldDiagonal;
 
     public BattleField(int x, int y, int width, int height) {
         availableBottomY = y;
@@ -78,6 +79,7 @@ public class BattleField {
 
         this.width = width;
         this.height = height;
+        fieldDiagonal = (int) new LxxPoint(x, y).distance(width, height);
 
         noSmoothX = new IntervalDouble(WALL_STICK, width - WALL_STICK);
         noSmoothY = new IntervalDouble(WALL_STICK, height - WALL_STICK);

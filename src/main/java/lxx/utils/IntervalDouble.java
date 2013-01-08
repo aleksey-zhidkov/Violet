@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2011 Alexey Zhidkov (Jdev). All Rights Reserved.
- */
-
 package lxx.utils;
 
 import static java.lang.Math.max;
@@ -9,8 +5,8 @@ import static java.lang.Math.min;
 
 public class IntervalDouble implements Comparable<IntervalDouble> {
 
-    public double a;
-    public double b;
+    public final double a;
+    public final double b;
 
     public IntervalDouble() {
         this.a = Long.MAX_VALUE;
@@ -43,13 +39,17 @@ public class IntervalDouble implements Comparable<IntervalDouble> {
         return a <= x && b >= x;
     }
 
-    public void extend(double x) {
+    public IntervalDouble extend(double x) {
+        double a = this.a;
+        double b = this.b;
         if (a > x) {
             a = x;
         }
         if (b < x) {
             b = x;
         }
+
+        return new IntervalDouble(a, b);
     }
 
     public boolean intersects(IntervalDouble another) {
@@ -61,9 +61,8 @@ public class IntervalDouble implements Comparable<IntervalDouble> {
         return min(b, another.b) - max(a, another.a);
     }
 
-    public void merge(IntervalDouble another) {
-        a = min(a, another.a);
-        b = max(b, another.b);
+    public IntervalDouble merge(double a, double b) {
+        return new IntervalDouble(min(a, this.a), max(b, this.b));
     }
 
     public int compareTo(IntervalDouble another) {

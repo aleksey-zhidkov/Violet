@@ -3,14 +3,14 @@ package lxx.utils;
 import static java.lang.Math.max;
 import static java.lang.StrictMath.min;
 
-public class ValueInfo {
+public class Values {
 
     private final AvgValue avgValue;
     private double maxValue = Long.MIN_VALUE;
     private double minValue = Long.MAX_VALUE;
     private double total;
 
-    public ValueInfo(int deph) {
+    public Values(int deph) {
         avgValue = new AvgValue(deph);
     }
 
@@ -19,6 +19,18 @@ public class ValueInfo {
         minValue = min(minValue, value);
         avgValue.addValue(value);
         total += value;
+    }
+
+    public double getMaxValue() {
+        return maxValue;
+    }
+
+    public double getMinValue() {
+        return minValue;
+    }
+
+    public AvgValue getAvgValue() {
+        return avgValue;
     }
 
     @Override

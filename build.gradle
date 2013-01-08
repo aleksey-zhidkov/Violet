@@ -43,24 +43,26 @@ def major = versionProps['major']
 def minor = versionProps['minor']
 def build = versionProps['build']
 
-if (gradle.startParameter.taskNames.contains('releaseViolet')) {
-    version = "${major}.${minor.toInteger() + 1}" // todo: fix this hack
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(releaseViolet)) {
+        version = "${major}.${minor.toInteger() + 1}" // todo: fix this hack
 
-    assertPreconditions("Release ", RELEASES_DIR)
+        assertPreconditions("Release ", RELEASES_DIR)
 
-    if (!repository.branch.equals("master")) {
-        throw new GradleException("Release must be build from master branch!")
+        if (!repository.branch.equals("master")) {
+            throw new GradleException("Release must be build from master branch!")
+        }
+    } else {
+        version = "${major}.${minor}.${getBranchAcro()}.${build}"
+
+        if (gradle.startParameter.taskNames.contains('installViolet')) {
+            assertPreconditions("Build ", BUILDS_DIR)
+        }
     }
-} else {
 
-    version = "${major}.${minor}.${getBranchAcro()}.${build}"
-
-    if (gradle.startParameter.taskNames.contains('installViolet')) {
-        assertPreconditions("Build ", BUILDS_DIR)
-    }
+    jar.archiveName = "${group}.${name}_${version}.jar"
 }
 
-jar.archiveName = "${group}.${name}_${version}.jar"
 
 repositories {
     mavenCentral()
@@ -79,12 +81,17 @@ repositories {
 
 dependencies {
     compile 'robocode:robocode:1.7.4.2'
-    compile 'junit:junit:4.11'
-    groovy 'org.codehaus.groovy:groovy:2.0.5'
+    testCompile 'junit:junit:4.11'
+    groovy 'org.codehaus.groovy:groovy:2.0.6'
 }
 
-task generateProperties << {
-    
+task generateProperties {
+    inputs.file VERSION_PROPERTIES_FILE
+    outputs.file { "${sourceSets.main.resources.srcDirs.iterator().next()}/lxx/${project.name}.properties" }
+}
+
+generateProperties << {
+
     def violetProperties = file("${sourceSets.main.resources.srcDirs.iterator().next()}/lxx/${project.name}.properties")
     if (!violetProperties.exists()) {
         violetProperties.getParentFile().mkdirs()
@@ -110,18 +117,18 @@ processResources.doFirst {
 
 processResources.dependsOn generateProperties
 
-assemble << {
-    project.copy {
-        from jar.archivePath
-        into "${RC_ROBOTS_DIR}"
-    }
+task copyBuild(type: Copy, dependsOn: assemble) {
+    from { jar.archivePath }
+    into RC_ROBOTS_DIR
 }
+
+tasks.build.dependsOn copyBuild
 
 task installViolet(dependsOn: ':build') << {
 
     copy(jar.archivePath, [RC_ROBOTS_DIR, RCC_ROBOTS_DIR, BUILDS_DIR])
     build++
-    updateVersionProperties(major, minor,  build)
+    updateVersionProperties(major, minor, build)
     commitBuild("Build ${version}")
 }
 
@@ -205,8 +212,8 @@ def pushMaster() {
 def updateVersionProperties(major, minor, build) {
     def versionPropertiesFile = file(VERSION_PROPERTIES_FILE)
     versionPropertiesFile.write "major=${major}\n" +
-                                "minor=${minor}\n" +
-                                "build=${build}"
+            "minor=${minor}\n" +
+            "build=${build}"
 }
 
 def getBranchAcro() {

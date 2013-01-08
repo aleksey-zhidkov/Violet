@@ -9,7 +9,9 @@ import static java.lang.Math.abs;
 
 public class LxxPoint extends Point2D.Double implements APoint, Serializable {
 
-    private static final NumberFormat format = new DecimalFormat();
+    private static final NumberFormat format = new DecimalFormat() {{
+        setMinimumFractionDigits(2);
+    }};
 
     static {
         format.setMaximumFractionDigits(2);
@@ -54,6 +56,10 @@ public class LxxPoint extends Point2D.Double implements APoint, Serializable {
 
     public LxxPoint project(double alpha, double dist) {
         return new LxxPoint(x + QuickMath.sin(alpha) * dist, y + QuickMath.cos(alpha) * dist);
+    }
+
+    public LxxPoint projectAccurate(double alpha, double dist) {
+        return new LxxPoint(x + Math.sin(alpha) * dist, y + Math.cos(alpha) * dist);
     }
 
     public double angleTo(APoint another) {

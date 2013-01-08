@@ -34,14 +34,14 @@ public class LxxRobot implements APoint {
     public final double movementDirection;
 
     public final Collection<Bullet> bullets;
-    public final BattleRules battleRules;
+    public final BattleRules rules;
     public final String name;
 
-    public LxxRobot(BattleRules battleRules, String name) {
-        this.battleRules = battleRules;
+    public LxxRobot(BattleRules rules, String name) {
+        this.rules = rules;
 
-        energy = battleRules.initialEnergy;
-        gunHeat = battleRules.initialGunHeat;
+        energy = rules.initialEnergy;
+        gunHeat = rules.initialGunHeat;
         alive = true;
         this.name = name;
 
@@ -62,7 +62,7 @@ public class LxxRobot implements APoint {
 
         bullets = new LinkedList<Bullet>();
 
-        assert gunHeat >= 0 && gunHeat <= battleRules.initialGunHeat : gunHeat;
+        assert gunHeat >= 0 && gunHeat <= rules.initialGunHeat : gunHeat;
     }
 
     public LxxRobot(LxxRobot prevState, long time) {
@@ -78,7 +78,7 @@ public class LxxRobot implements APoint {
         gunHeading = prevState.gunHeading;
         alive = prevState.alive;
         firePower = 0;
-        gunHeat = max(0, prevState.gunHeat - prevState.battleRules.gunCoolingRate * time);
+        gunHeat = max(0, prevState.gunHeat - prevState.rules.gunCoolingRate * time);
 
         speed = prevState.speed;
 
@@ -86,14 +86,14 @@ public class LxxRobot implements APoint {
         movementDirection = prevState.movementDirection;
 
         bullets = new LinkedList<Bullet>();
-        battleRules = prevState.battleRules;
+        rules = prevState.rules;
         name = prevState.name;
 
-        assert gunHeat >= 0 && gunHeat <= battleRules.initialGunHeat : gunHeat;
+        assert gunHeat >= 0 && gunHeat <= rules.initialGunHeat : gunHeat;
     }
 
     public LxxRobot(LxxRobot prevState, LxxRobotInfo currentState) {
-        battleRules = prevState.battleRules;
+        rules = prevState.rules;
         position = currentState.position;
         velocity = currentState.velocity;
         heading = currentState.heading;
@@ -128,19 +128,19 @@ public class LxxRobot implements APoint {
             }
         }
 
-        if (prevState.gunHeat - battleRules.gunCoolingRate * (currentState.time - prevState.time) <= 0 && energy < expectedEnergy && currentState.alive) {
+        if (prevState.gunHeat - rules.gunCoolingRate * (currentState.time - prevState.time) <= 0 && energy < expectedEnergy && currentState.alive) {
             firePower = expectedEnergy - energy;
             assert firePower > 0 && firePower <= 3 : firePower;
             gunHeat = Rules.getGunHeat(firePower);
         } else {
             firePower = 0;
-            gunHeat = max(0, prevState.gunHeat - battleRules.gunCoolingRate * (currentState.time - prevState.time)); // TODO (azhidkov): add tests
+            gunHeat = max(0, prevState.gunHeat - rules.gunCoolingRate * (currentState.time - prevState.time)); // TODO (azhidkov): add tests
         }
 
         bullets = currentState.bullets;
         name = currentState.name;
 
-        assert gunHeat >= 0 && gunHeat <= battleRules.initialGunHeat : gunHeat;
+        assert gunHeat >= 0 && gunHeat <= rules.initialGunHeat : gunHeat;
     }
 
     public LxxRobot(LxxRobot original, double turnRate, double desiredVelocity) {
@@ -165,7 +165,7 @@ public class LxxRobot implements APoint {
         acceleration = NaN;
         movementDirection = NaN;
         bullets = null;
-        battleRules = null;
+        rules = null;
         name = null;
     }
 
@@ -299,4 +299,7 @@ public class LxxRobot implements APoint {
         return prevState.position.distance(curPos) - curVelocity < -1.1;
     }
 
+    public double getTurnsToGunCool() {
+        return gunHeat / rules.gunCoolingRate;
+    }
 }

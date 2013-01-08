@@ -1,6 +1,8 @@
 package lxx.model;
 
 import lxx.utils.*;
+import lxx.utils.func.F1;
+import lxx.utils.func.LxxCollections;
 import robocode.Bullet;
 import robocode.Rules;
 
@@ -20,16 +22,31 @@ public class BattleState {
     public final LxxRobot enemy;
     public final long time;
     public final BattleState prevState;
+    public final LxxWave myFiredBullet;
+    public final LxxWave enemyFiredBullet;
 
-    public BattleState(BattleState prev, BattleRules battleRules, LxxRobot me, LxxRobot enemy) {
+    public BattleState(final BattleState prev, LxxRobot me, LxxRobot enemy) {
         this.prevState = prev;
         this.time = me.time;
-        this.rules = battleRules;
+        this.rules = prev.rules;
         this.me = me;
         this.enemy = enemy;
 
         myBullets = updateWaves(prev.myBullets, prev.me, prev.enemy, me, enemy);
+        myFiredBullet = LxxCollections.find(myBullets, new F1<LxxWave, Boolean>() {
+            @Override
+            public Boolean f(LxxWave lxxWave) {
+                return lxxWave.time == prev.time;
+            }
+        });
+
         enemyBullets = updateWaves(prev.enemyBullets, prev.enemy, prev.me, enemy, me);
+        enemyFiredBullet = LxxCollections.find(enemyBullets, new F1<LxxWave, Boolean>() {
+            @Override
+            public Boolean f(LxxWave lxxWave) {
+                return lxxWave.time == prev.time;
+            }
+        });
     }
 
     public BattleState(BattleRules battleRules, LxxRobot me, LxxRobot enemy) {
@@ -41,6 +58,8 @@ public class BattleState {
 
         myBullets = Collections.emptyList();
         enemyBullets = Collections.emptyList();
+        myFiredBullet = null;
+        enemyFiredBullet = null;
     }
 
     public List<LxxWave> getEnemyBullets(final APoint pnt, double flightTimeLimit, int cnt) {
@@ -71,13 +90,8 @@ public class BattleState {
                                              LxxRobot robot, LxxRobot opponent) {
         final List<LxxWave> newBullets = new ArrayList<LxxWave>(robotBullets);
         if (robot.firePower > 0) {
-            try {
-                final LxxWave lxxWave = new LxxWave(oldRobot, oldOpponent, Rules.getBulletSpeed(robot.firePower), oldRobot.time);
-                newBullets.add(lxxWave);
-            } catch (NullPointerException e) {
-                e.printStackTrace();
-                new LxxWave(oldRobot, oldOpponent, Rules.getBulletSpeed(robot.firePower), oldRobot.time);
-            }
+            final LxxWave lxxWave = new LxxWave(oldRobot, oldOpponent, Rules.getBulletSpeed(robot.firePower), oldRobot.time);
+            newBullets.add(lxxWave);
         }
 
         final boolean hasBullets = robot.bullets.size() > 0;
@@ -115,4 +129,7 @@ public class BattleState {
         return Collections.unmodifiableCollection(enemyBullets);
     }
 
+    public LxxRobot getRobot(String robotName) {
+        return me.name.equals(robotName) ? me : enemy;
+    }
 }

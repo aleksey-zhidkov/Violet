@@ -78,7 +78,7 @@ public class BattleStateFactory {
         final LxxRobot me = new LxxRobot(battleState.me, myInfo);
         final LxxRobot enemy = new LxxRobot(battleState.enemy, enemyInfo);
 
-        return new BattleState(battleState, battleState.rules, me, enemy);
+        return new BattleState(battleState, me, enemy);
     }
 
     private static LxxRobotInfo getMyInfo(RobotStatus status) {

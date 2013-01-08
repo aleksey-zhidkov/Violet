@@ -49,7 +49,7 @@ public class LxxUtils {
     }
 
     public static double lateralDirection(APoint center, LxxRobot robot) {
-        return lateralDirection(center, robot, robot.speed, robot.movementDirection);
+        return lateralDirection(center, robot, robot.velocity, robot.heading);
     }
 
     private static double lateralDirection(APoint center, APoint pos, double velocity, double heading) {
@@ -61,12 +61,23 @@ public class LxxUtils {
     }
 
     public static double lateralVelocity(APoint center, LxxRobot robot) {
-        return lateralVelocity(center, robot, robot.speed, robot.movementDirection);
+        return lateralVelocity(center, robot, robot.velocity, robot.heading);
     }
 
-    private static double lateralVelocity(APoint center, APoint pos, double velocity, double heading) {
-        assert Double.isNaN(heading);
-        return velocity * Math.sin(Utils.normalRelativeAngle(heading - center.angleTo(pos)));
+    public static double lateralVelocity(APoint center, APoint pos, double velocity, double heading) {
+        assert !Double.isNaN(heading);
+        assert heading >= 0 && heading <= LxxConstants.RADIANS_360;
+        return velocity * QuickMath.sin(Utils.normalRelativeAngle(heading - center.angleTo(pos)));
+    }
+
+    public static double advancingVelocity(APoint center, LxxRobot robot) {
+        return advancingVelocity(center, robot, robot.velocity, robot.heading);
+    }
+
+    public static double advancingVelocity(APoint center, APoint pos, double velocity, double heading) {
+        assert !Double.isNaN(heading);
+        assert heading >= 0 && heading <= LxxConstants.RADIANS_360;
+        return velocity * QuickMath.cos(Utils.normalRelativeAngle(heading - center.angleTo(pos)));
     }
 
     public static double getBulletPower(double bulletSpeed) {
@@ -106,7 +117,7 @@ public class LxxUtils {
     }
 
     public static double getMaxEscapeAngle(double bulletSpeed) {
-        return QuickMath.asin(Rules.MAX_VELOCITY / bulletSpeed);
+        return QuickMath.asin(Rules.MAX_VELOCITY / bulletSpeed) * 1.1;
     }
 
     public static double calculateAcceleration(LxxRobot prevState, LxxRobot curState) {

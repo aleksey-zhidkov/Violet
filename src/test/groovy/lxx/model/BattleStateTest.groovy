@@ -40,7 +40,7 @@ public class BattleStateTest {
         newState.position = firePos;
         newState.time = 31;
         newState.alive = true;
-        bs = new BattleState(bs, rules, new LxxRobot(me, newState), new LxxRobot(enemy, enemy.time + 1));
+        bs = new BattleState(bs, new LxxRobot(me, newState), new LxxRobot(enemy, enemy.time + 1));
 
         assertEquals(1, bs.getMyBullets().size());
 
@@ -66,13 +66,13 @@ public class BattleStateTest {
                 ['energy': 100, 'position': new LxxPoint(10, 10), 'alive': true])
         def battleState1 = new BattleState(TestConstants.stdDuelBattleRules, me, enemy)
         me = LxxRobotFactory.createMockLxxRobot(me, ['alive': true, 'energy': 99, 'position': new LxxPoint(100, 100)])
-        def battleState2 = new BattleState(battleState1, TestConstants.stdDuelBattleRules, me, enemy)
+        def battleState2 = new BattleState(battleState1, me, enemy)
         assertEquals(1, battleState2.myBullets.size())
         me = LxxRobotFactory.createMockLxxRobot(me,
                 ['energy': 99, 'bullets': [new Bullet(0, 0, 0, 0, "", "", true, -1)]])
         enemy = LxxRobotFactory.createMockLxxRobot(timeToCoolGun,
                 ['energy': 100])
-        final battleState3 = new BattleState(battleState2, TestConstants.stdDuelBattleRules, me, enemy)
+        final battleState3 = new BattleState(battleState2, me, enemy)
     }
 
 }

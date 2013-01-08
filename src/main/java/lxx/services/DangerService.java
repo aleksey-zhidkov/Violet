@@ -1,5 +1,6 @@
 package lxx.services;
 
+import lxx.model.BattleState;
 import lxx.utils.BearingOffsetDanger;
 import lxx.model.LxxWave;
 import lxx.utils.*;
@@ -12,7 +13,11 @@ import java.util.List;
 import static java.lang.Math.abs;
 import static java.lang.Math.random;
 
-public class DangerService {
+public class DangerService implements DataService {
+
+    @Override
+    public void updateData(BattleState state) {
+    }
 
     private final LxxHashMap<LxxWave, List<BearingOffsetDanger>> waveDangers = new LxxHashMap<LxxWave, List<BearingOffsetDanger>>(
             new F1<LxxWave, List<BearingOffsetDanger>>() {

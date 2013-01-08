@@ -1,10 +1,12 @@
 package lxx.strategy;
 
+import lxx.gun.Gun;
 import lxx.model.BattleState;
 import lxx.model.LxxRobot;
 import lxx.movement.MovementDecision;
 import lxx.movement.WaveSurfingMovement;
 import lxx.utils.LxxConstants;
+import robocode.Rules;
 import robocode.util.Utils;
 
 import static java.lang.Math.signum;
@@ -12,9 +14,11 @@ import static java.lang.Math.signum;
 public class DuelStrategy implements Strategy {
 
     private final WaveSurfingMovement waveSurfingMovement;
+    private final Gun gun;
 
-    public DuelStrategy(WaveSurfingMovement waveSurfingMovement) {
+    public DuelStrategy(WaveSurfingMovement waveSurfingMovement, Gun gun) {
         this.waveSurfingMovement = waveSurfingMovement;
+        this.gun = gun;
     }
 
     @Override
@@ -26,9 +30,10 @@ public class DuelStrategy implements Strategy {
 
         final MovementDecision md = waveSurfingMovement.getMovementDecision(battleState);
 
+        final double bulletPower = 1.95;
         return new TurnDecision(md.desiredVelocity, md.turnRate,
-                Utils.normalRelativeAngle(battleState.me.angleTo(battleState.enemy) - battleState.me.gunHeading),
-                1.95, getRadarTurnAngleRadians(battleState));
+                gun.getGunTurnAngle(battleState, Rules.getBulletSpeed(bulletPower)),
+                bulletPower, getRadarTurnAngleRadians(battleState));
     }
 
     public double getRadarTurnAngleRadians(BattleState battleState) {
