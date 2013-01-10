@@ -66,7 +66,7 @@ gradle.taskGraph.whenReady { taskGraph ->
         if (currentVersion.build != '0') {
             throw new GradleException("Quick fix may be applied only to release")
         }
-        assertPreconditions("Quick fix release ", RELEASES_DIR)
+        assertPreconditions("Release ", RELEASES_DIR)
 
         if (!repository.branch.equals("master")) {
             throw new GradleException("Release must be build from master branch!")
@@ -167,7 +167,7 @@ task quickFixRelease(dependsOn: ':build') << {
 
     copy(jar.archivePath, [RC_ROBOTS_DIR, RCC_ROBOTS_DIR, RELEASES_DIR])
     updateVersionProperties(nextVersion)
-    commitBuild("Release ${version}")
+    commitBuild("Quick fix release ${version}")
     tagBuild()
     pushMaster()
 
