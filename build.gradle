@@ -40,12 +40,19 @@ buildDir = relativePath("${USER_HOME}/builds/${name}")
 
 def versionProps = versionProps()
 def major = versionProps['major']
-def minor = versionProps['minor']
+String minor = versionProps['minor']
 def build = versionProps['build']
+def currentVersion = [major: major,
+        minor: minor.split('\\.'),
+        branch: getBranchAcro(),
+        build: build
+]
+def nextVersion = [:]
 
 gradle.taskGraph.whenReady { taskGraph ->
     if (taskGraph.hasTask(releaseViolet)) {
-        version = "${major}.${minor.toInteger() + 1}" // todo: fix this hack
+        nextVersion = getNextVersion(currentVersion, 'release')
+        version = "${nextVersion.major}.${nextVersion.minor.join('.')}" // todo: fix this hack
 
         assertPreconditions("Release ", RELEASES_DIR)
 
@@ -53,15 +60,20 @@ gradle.taskGraph.whenReady { taskGraph ->
             throw new GradleException("Release must be build from master branch!")
         }
     } else if (taskGraph.hasTask(quickFixRelease)) {
-        version = "${major}.${minor.toInteger()}.${build.toInteger() + 1}" // todo: fix this hack
+        nextVersion = getNextVersion(currentVersion, 'quickFix')
+        version = "${nextVersion.major}.${nextVersion.minor.join('.')}" // todo: fix this hack
 
+        if (currentVersion.build != '0') {
+            throw new GradleException("Quick fix may be applied only to release")
+        }
         assertPreconditions("Release ", RELEASES_DIR)
 
         if (!repository.branch.equals("master")) {
             throw new GradleException("Release must be build from master branch!")
         }
     } else {
-        version = "${major}.${minor}.${getBranchAcro()}.${build}"
+        nextVersion = getNextVersion(currentVersion, 'build')
+        version = "${nextVersion.major}.${nextVersion.minor.join('.')}.${nextVersion.branch}.${nextVersion.build}"
 
         if (gradle.startParameter.taskNames.contains('installViolet')) {
             assertPreconditions("Build ", BUILDS_DIR)
@@ -135,8 +147,7 @@ tasks.build.dependsOn copyBuild
 task installViolet(dependsOn: ':build') << {
 
     copy(jar.archivePath, [RC_ROBOTS_DIR, RCC_ROBOTS_DIR, BUILDS_DIR])
-    build++
-    updateVersionProperties(major, minor, build)
+    updateVersionProperties(nextVersion)
     commitBuild("Build ${version}")
 }
 
@@ -145,9 +156,7 @@ task installViolet(dependsOn: ':build') << {
 task releaseViolet(dependsOn: ':build') << {
 
     copy(jar.archivePath, [RC_ROBOTS_DIR, RCC_ROBOTS_DIR, RELEASES_DIR])
-    minor = minor.toInteger() + 1
-    build = 0
-    updateVersionProperties(major, minor, build)
+    updateVersionProperties(nextVersion)
     commitBuild("Release ${version}")
     tagBuild()
     pushMaster()
@@ -157,8 +166,7 @@ task releaseViolet(dependsOn: ':build') << {
 task quickFixRelease(dependsOn: ':build') << {
 
     copy(jar.archivePath, [RC_ROBOTS_DIR, RCC_ROBOTS_DIR, RELEASES_DIR])
-    build++
-    updateVersionProperties(major, minor, build)
+    updateVersionProperties(nextVersion)
     commitBuild("Release ${version}")
     tagBuild()
     pushMaster()
@@ -228,11 +236,11 @@ def pushMaster() {
     pushCmd.call()
 }
 
-def updateVersionProperties(major, minor, build) {
+def updateVersionProperties(def version) {
     def versionPropertiesFile = file(VERSION_PROPERTIES_FILE)
-    versionPropertiesFile.write "major=${major}\n" +
-            "minor=${minor}\n" +
-            "build=${build}"
+    versionPropertiesFile.write "major=${version.major}\n" +
+            "minor=${version.minor.join('.')}\n" +
+            "build=${version.build}"
 }
 
 def getBranchAcro() {
@@ -248,4 +256,40 @@ def versionProps() {
         versionProps.load(reader)
     }
     versionProps
+}
+
+def getNextVersion(def currentVersion, def type) {
+    switch (type) {
+        case 'build':
+            return [major: currentVersion.major,
+                    minor: currentVersion.minor,
+                    branch: currentVersion.branch,
+                    build: currentVersion.build.toInteger() + 1
+            ]
+
+        case 'quickFix':
+            if (currentVersion.minor.size() == 1) {
+                return [major: currentVersion.major,
+                        minor: (currentVersion.minor as List) + '1',
+                        branch: currentVersion.branch,
+                        build: 0
+                ]
+            } else {
+                def minor = new ArrayList(currentVersion.minor as List)
+                minor[minor.size() - 1] = minor[minor.size() - 1].toInteger() + 1
+                return [major: currentVersion.major,
+                        minor: minor,
+                        branch: currentVersion.branch,
+                        build: 0
+                ]
+            }
+            break;
+        case 'release':
+            return [major: currentVersion.major,
+                    minor: [currentVersion.minor[0].toInteger() + 1],
+                    branch: currentVersion.branch,
+                    build: 0
+            ]
+            break;
+    }
 }

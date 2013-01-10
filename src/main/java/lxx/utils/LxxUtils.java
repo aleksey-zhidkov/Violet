@@ -117,7 +117,7 @@ public class LxxUtils {
     }
 
     public static double getMaxEscapeAngle(double bulletSpeed) {
-        return QuickMath.asin(Rules.MAX_VELOCITY / bulletSpeed) * 1.1;
+        return QuickMath.asin(Rules.MAX_VELOCITY / bulletSpeed) * 1.2;
     }
 
     public static double calculateAcceleration(LxxRobot prevState, LxxRobot curState) {
