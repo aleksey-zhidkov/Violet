@@ -16,6 +16,8 @@ class LxxRobotFactory {
         info.time = time + 1
         info.position = params.get('position', null) as LxxPoint
         info.alive = params.get('alive', false) as Boolean
+        info.gunHeading = params.get('gunHeading', null) as Double
+        info.time = params.get('time', 0) as Long
         new LxxRobot(prevState, info)
     }
 

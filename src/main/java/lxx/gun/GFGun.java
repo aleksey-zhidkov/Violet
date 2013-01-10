@@ -1,8 +1,8 @@
 package lxx.gun;
 
 import lxx.model.BattleState;
-import lxx.services.GFEnemyMovementLogService;
-import lxx.utils.BearingOffsetDanger;
+import lxx.services.GFMovementLogService;
+import lxx.utils.ScoredBearingOffset;
 import robocode.util.Utils;
 
 import java.util.List;
@@ -11,10 +11,10 @@ import static java.lang.Math.*;
 
 public class GFGun implements Gun {
 
-    private final GFEnemyMovementLogService logService;
+    private final GFMovementLogService logService;
     private Double bearingOffset = null;
 
-    public GFGun(GFEnemyMovementLogService logService) {
+    public GFGun(GFMovementLogService logService) {
         this.logService = logService;
     }
 
@@ -35,26 +35,27 @@ public class GFGun implements Gun {
     }
 
     private Double getBearingOffset(BattleState state, double bulletSpeed) {
-        final List<BearingOffsetDanger> visits = logService.getVisits(state, bulletSpeed);
+        final List<ScoredBearingOffset> visits = logService.getVisits(state, bulletSpeed);
         if (visits.size() == 0) {
             return 0d;
         }
 
-        final double[] boScores = new double[181];
-        int bestBo = 90;
-        for (BearingOffsetDanger dng : visits) {
-            final int centerIdx = (int) (dng.bearingOffset * 90 + 90);
+        final double[] boScores = new double[205];
+        int bestBo = 104;
+        for (ScoredBearingOffset bo : visits) {
+            assert bo.score <= 1;
+            final int centerIdx = (int) (toDegrees(bo.bearingOffset * 2) + 104);
             final int fromIdx = max(0, centerIdx - 5);
             final int toIdx = min(boScores.length - 1, centerIdx + 5);
 
             for (int i = fromIdx; i <= toIdx; i++) {
-                boScores[i] += dng.danger / (abs(i - centerIdx) + 1);
+                boScores[i] += bo.score / (abs(i - centerIdx) + 1);
                 if (boScores[i] > boScores[bestBo]) {
                     bestBo = i;
                 }
             }
         }
 
-        return toRadians(bestBo - 90) / 2;
+        return toRadians(bestBo - 104) / 2;
     }
 }

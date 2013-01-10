@@ -4,7 +4,7 @@ import ags.utils.KdTree;
 import lxx.model.BattleState;
 import lxx.model.LxxRobot;
 import lxx.model.LxxWave;
-import lxx.utils.BearingOffsetDanger;
+import lxx.utils.ScoredBearingOffset;
 import lxx.utils.GuessFactor;
 import lxx.utils.LxxConstants;
 import lxx.utils.LxxUtils;
@@ -18,7 +18,7 @@ import java.util.Map;
 import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
-public class GFEnemyMovementLogService implements DataService {
+public class GFEnemyMovementLogService implements DataService, GFMovementLogService {
 
     private final WavesService wavesService = new WavesService();
     private final KdTree<GuessFactor> tree;
@@ -46,8 +46,8 @@ public class GFEnemyMovementLogService implements DataService {
         }
     }
 
-    public List<BearingOffsetDanger> getVisits(BattleState state, double bulletSpeed) {
-        final List<BearingOffsetDanger> visits = new ArrayList<BearingOffsetDanger>();
+    public List<ScoredBearingOffset> getVisits(BattleState state, double bulletSpeed) {
+        final List<ScoredBearingOffset> visits = new ArrayList<ScoredBearingOffset>();
 
         final double[] currentLoc = getLocation(state.me, state.enemy);
         final List<KdTree.Entry<GuessFactor>> entries = tree.nearestNeighbor(currentLoc, (int) max(10, sqrt(tree.size())), true);
@@ -57,9 +57,9 @@ public class GFEnemyMovementLogService implements DataService {
         final double maxDist = entries.get(0).distance;
 
         for (KdTree.Entry<GuessFactor> entry : entries) {
-            visits.add(new BearingOffsetDanger(entry.value.getBearingOffset(LxxUtils.getMaxEscapeAngle(bulletSpeed),
+            visits.add(new ScoredBearingOffset(entry.value.getBearingOffset(LxxUtils.getMaxEscapeAngle(bulletSpeed),
                     LxxUtils.lateralDirection(state.me, state.enemy)),
-                    entry.distance / maxDist));
+                    1 - entry.distance / maxDist));
         }
 
         return visits;

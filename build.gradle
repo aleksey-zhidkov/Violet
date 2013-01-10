@@ -52,6 +52,14 @@ gradle.taskGraph.whenReady { taskGraph ->
         if (!repository.branch.equals("master")) {
             throw new GradleException("Release must be build from master branch!")
         }
+    } else if (taskGraph.hasTask(quickFixRelease)) {
+        version = "${major}.${minor.toInteger()}.${build.toInteger() + 1}" // todo: fix this hack
+
+        assertPreconditions("Release ", RELEASES_DIR)
+
+        if (!repository.branch.equals("master")) {
+            throw new GradleException("Release must be build from master branch!")
+        }
     } else {
         version = "${major}.${minor}.${getBranchAcro()}.${build}"
 
@@ -139,6 +147,17 @@ task releaseViolet(dependsOn: ':build') << {
     copy(jar.archivePath, [RC_ROBOTS_DIR, RCC_ROBOTS_DIR, RELEASES_DIR])
     minor = minor.toInteger() + 1
     build = 0
+    updateVersionProperties(major, minor, build)
+    commitBuild("Release ${version}")
+    tagBuild()
+    pushMaster()
+
+}
+
+task quickFixRelease(dependsOn: ':build') << {
+
+    copy(jar.archivePath, [RC_ROBOTS_DIR, RCC_ROBOTS_DIR, RELEASES_DIR])
+    build++
     updateVersionProperties(major, minor, build)
     commitBuild("Release ${version}")
     tagBuild()

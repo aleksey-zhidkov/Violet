@@ -1,7 +1,7 @@
 package lxx.services;
 
 import lxx.model.BattleState;
-import lxx.utils.BearingOffsetDanger;
+import lxx.utils.ScoredBearingOffset;
 import lxx.model.LxxWave;
 import lxx.utils.*;
 import lxx.utils.func.F1;
@@ -19,13 +19,13 @@ public class DangerService implements DataService {
     public void updateData(BattleState state) {
     }
 
-    private final LxxHashMap<LxxWave, List<BearingOffsetDanger>> waveDangers = new LxxHashMap<LxxWave, List<BearingOffsetDanger>>(
-            new F1<LxxWave, List<BearingOffsetDanger>>() {
-                public List<BearingOffsetDanger> f(LxxWave lxxWave) {
-                    final List<BearingOffsetDanger> res = new ArrayList<BearingOffsetDanger>();
+    private final LxxHashMap<LxxWave, List<ScoredBearingOffset>> waveDangers = new LxxHashMap<LxxWave, List<ScoredBearingOffset>>(
+            new F1<LxxWave, List<ScoredBearingOffset>>() {
+                public List<ScoredBearingOffset> f(LxxWave lxxWave) {
+                    final List<ScoredBearingOffset> res = new ArrayList<ScoredBearingOffset>();
 
                     for (int i = 0; i < 100; i++) {
-                        res.add(new BearingOffsetDanger(random() * LxxConstants.RADIANS_90 - LxxConstants.RADIANS_45, random()));
+                        res.add(new ScoredBearingOffset(random() * LxxConstants.RADIANS_90 - LxxConstants.RADIANS_45, random()));
                     }
 
                     return res;
@@ -51,7 +51,7 @@ public class DangerService implements DataService {
         };
     }
 
-    private double getPointDanger(LxxWave wave, APoint pnt, List<BearingOffsetDanger> predictedBearingOffsets) {
+    private double getPointDanger(LxxWave wave, APoint pnt, List<ScoredBearingOffset> predictedBearingOffsets) {
         if (predictedBearingOffsets.size() == 0) {
             return 0;
         }
@@ -63,7 +63,7 @@ public class DangerService implements DataService {
         double bulletsDanger = 0;
         final double hiEffectDist = robotWidthInRadians * 0.75;
         final double lowEffectDist = robotWidthInRadians * 2.55;
-        for (BearingOffsetDanger bo : predictedBearingOffsets) {
+        for (ScoredBearingOffset bo : predictedBearingOffsets) {
             if (bo.bearingOffset < bearingOffset - lowEffectDist) {
                 continue;
             } else if (bo.bearingOffset > bearingOffset + lowEffectDist) {
@@ -71,9 +71,9 @@ public class DangerService implements DataService {
             }
             final double dist = abs(bearingOffset - bo.bearingOffset);
             if (dist < hiEffectDist) {
-                bulletsDanger += (2 - (dist / hiEffectDist)) * bo.danger;
+                bulletsDanger += (2 - (dist / hiEffectDist)) * bo.score;
             } else if (dist < lowEffectDist) {
-                bulletsDanger += (1 - (dist / lowEffectDist)) * bo.danger;
+                bulletsDanger += (1 - (dist / lowEffectDist)) * bo.score;
             }
         }
 
