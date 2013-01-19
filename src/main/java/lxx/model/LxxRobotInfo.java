@@ -8,7 +8,8 @@ import java.util.List;
 
 public class LxxRobotInfo {
 
-    public final List<Bullet> bullets = new LinkedList<Bullet>();
+    public final List<Bullet> hitBullets = new LinkedList<Bullet>();
+    public final List<Bullet> interceptedBullets = new LinkedList<Bullet>();
 
     public LxxPoint position;
     public double velocity;
@@ -19,7 +20,7 @@ public class LxxRobotInfo {
     public Double radarHeading;
     public Double gunHeading;
     public boolean alive;
-    public double wallDmg;
+    public Double wallDmg;
     public double receivedDmg;
     public double returnedEnergy;
     public boolean hitRobot;

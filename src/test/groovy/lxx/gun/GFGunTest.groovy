@@ -27,10 +27,10 @@ class GFGunTest {
         })
 
         final enemyPos = new LxxPoint(10, 10)
-        LxxRobot enemy = LxxRobotFactory.createMockLxxRobot(0,
+        LxxRobot enemy = LxxRobotFactory.createMockRobot(0,
                 ['energy': 100, 'position': enemyPos, 'alive': true])
         final myPos = new LxxPoint(100, 100)
-        LxxRobot me = LxxRobotFactory.createMockLxxRobot(0,
+        LxxRobot me = LxxRobotFactory.createMockRobot(0,
                 ['energy': 100,
                         'position': myPos,
                         'alive': true,

@@ -4,12 +4,16 @@ import lxx.model.LxxRobot
 import lxx.model.LxxRobotInfo
 import lxx.utils.LxxPoint
 import robocode.Bullet
+import robocode.Rules
+
+import static java.lang.Math.random
+import static lxx.tests.TestConstants.stdDuelBattleRules
 
 class LxxRobotFactory {
 
-    private static LxxRobot original = new LxxRobot(TestConstants.stdDuelBattleRules, "")
+    private static LxxRobot original = new LxxRobot(stdDuelBattleRules, "")
 
-    def static createMockLxxRobot(long time, Map<String, Object> params) {
+    def static createMockRobot(long time, Map<String, Object> params) {
         def prevState = new LxxRobot(original, time)
         def info = new LxxRobotInfo()
         info.energy = params.get('energy', 0d) as Double
@@ -20,16 +24,28 @@ class LxxRobotFactory {
         new LxxRobot(prevState, info)
     }
 
-    def static createMockLxxRobot(LxxRobot original, Map<String, Object> params) {
+    def static createMockRobot(LxxRobot original, Map<String, Object> params) {
         def info = new LxxRobotInfo()
         info.energy = params.get('energy', 0d) as Double
         info.time = original.time + 1
         info.position = params.get('position', null) as LxxPoint
-        if (params['bullets'] != null) {
-            info.bullets.addAll(params['bullets'] as List<Bullet>)
+        if (params['hitBullets'] != null) {
+            info.hitBullets.addAll(params['hitBullets'] as List<Bullet>)
         }
         info.alive = params.get('alive', false) as Boolean
         new LxxRobot(original, info)
+    }
+
+    static LxxRobot generateRandomMockRobot() {
+        def prevState = new LxxRobot(original, original.time + 1)
+        def info = new LxxRobotInfo()
+        info.energy = random() * 100
+        info.position = new LxxPoint(random() * stdDuelBattleRules.field.width, random() * stdDuelBattleRules.field.height)
+        info.velocity = random() * Rules.MAX_VELOCITY - Rules.MAX_VELOCITY
+        TestUtils.setFinal(prevState, LxxRobot.getField('velocity'), random() * Rules.MAX_VELOCITY)
+        def acceleration = (Rules.ACCELERATION + Rules.DECELERATION) * random() - Rules.DECELERATION
+        info.velocity = prevState.velocity + acceleration
+        new LxxRobot(prevState, info)
     }
 
 }

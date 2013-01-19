@@ -105,6 +105,7 @@ public class LxxWave implements APoint {
     }
 
     public boolean isPassed(LxxRobot robot) {
-        return launcher.distance(robot) < getTraveledDistance(robot.time);
+        final double traveledDistance = getTraveledDistance(robot.time);
+        return LxxUtils.contains(launcher.position, traveledDistance, LxxUtils.getBoundingRectangleAt(robot));
     }
 }

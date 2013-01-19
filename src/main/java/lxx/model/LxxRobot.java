@@ -6,6 +6,7 @@ import robocode.Rules;
 import robocode.util.Utils;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 
 import static java.lang.Double.NaN;
@@ -33,7 +34,8 @@ public class LxxRobot implements APoint {
     public final double acceleration;
     public final double movementDirection;
 
-    public final Collection<Bullet> bullets;
+    public final Collection<Bullet> hitBullets;
+    public final Collection<Bullet> interceptedBullets;
     public final BattleRules rules;
     public final String name;
 
@@ -60,7 +62,8 @@ public class LxxRobot implements APoint {
         acceleration = 0;
         movementDirection = 0;
 
-        bullets = new LinkedList<Bullet>();
+        hitBullets = new LinkedList<Bullet>();
+        interceptedBullets = new LinkedList<Bullet>();
 
         assert gunHeat >= 0 && gunHeat <= rules.initialGunHeat : gunHeat;
     }
@@ -85,7 +88,8 @@ public class LxxRobot implements APoint {
         acceleration = prevState.acceleration;
         movementDirection = prevState.movementDirection;
 
-        bullets = new LinkedList<Bullet>();
+        hitBullets = new LinkedList<Bullet>();
+        interceptedBullets = new LinkedList<Bullet>();
         rules = prevState.rules;
         name = prevState.name;
 
@@ -117,30 +121,41 @@ public class LxxRobot implements APoint {
         }
 
         double expectedEnergy = prevState.energy;
+        final boolean isHitWall = isHitWall(prevState, currentState);
         if (currentState.energy != prevState.energy) {
-            final boolean isHitWall = isHitWall(prevState, currentState.position, velocity);
             expectedEnergy += currentState.returnedEnergy - currentState.receivedDmg;
             if (isHitWall) {
-                expectedEnergy -= Rules.getWallHitDamage(prevState.velocity + prevState.acceleration);
+                expectedEnergy -= currentState.wallDmg != null
+                        ? currentState.wallDmg
+                        : Rules.getWallHitDamage(LxxUtils.limit(0, prevState.speed + prevState.acceleration, Rules.MAX_VELOCITY));
             }
             if (currentState.hitRobot) {
                 expectedEnergy -= LxxConstants.ROBOT_HIT_DAMAGE;
             }
         }
 
-        if (prevState.gunHeat - rules.gunCoolingRate * (currentState.time - prevState.time) <= 0 && energy < expectedEnergy && currentState.alive) {
-            firePower = expectedEnergy - energy;
-            assert firePower > 0 && firePower <= 3 : firePower;
-            gunHeat = Rules.getGunHeat(firePower);
+        final boolean canFire = prevState.gunHeat - rules.gunCoolingRate * (currentState.time - prevState.time) <= 0 && prevState.alive;
+        final boolean firedForSure = energy < prevState.energy && currentState.time == prevState.time + 1 &&
+                currentState.receivedDmg == 0 && currentState.returnedEnergy == 0 && !isHitWall && !currentState.hitRobot;
+        if (firedForSure || (canFire && energy < expectedEnergy)) {
+            firePower = LxxUtils.limit(0.1, expectedEnergy - energy, Rules.MAX_BULLET_POWER);
+            assert isHitWall || firePower > 0 && firePower <= 3 : firePower;
+            gunHeat = Rules.getGunHeat(firePower) - rules.gunCoolingRate;
         } else {
             firePower = 0;
-            gunHeat = max(0, prevState.gunHeat - rules.gunCoolingRate * (currentState.time - prevState.time)); // TODO (azhidkov): add tests
+            if (alive) {
+                gunHeat = max(0, prevState.gunHeat - rules.gunCoolingRate * (currentState.time - prevState.time)); // TODO (azhidkov): add tests
+            } else {
+                gunHeat = prevState.gunHeat;
+            }
         }
 
-        bullets = currentState.bullets;
+        hitBullets = Collections.unmodifiableList(currentState.hitBullets);
+        interceptedBullets = Collections.unmodifiableList(currentState.interceptedBullets);
         name = currentState.name;
 
         assert gunHeat >= 0 && gunHeat <= rules.initialGunHeat : gunHeat;
+        assert gunHeat < prevState.gunHeat || prevState.gunHeat < rules.gunCoolingRate || !alive || prevState.time != currentState.time - 1;
     }
 
     public LxxRobot(LxxRobot original, double turnRate, double desiredVelocity) {
@@ -164,7 +179,8 @@ public class LxxRobot implements APoint {
         gunHeat = NaN;
         acceleration = NaN;
         movementDirection = NaN;
-        bullets = null;
+        hitBullets = null;
+        interceptedBullets = null;
         rules = null;
         name = null;
     }
@@ -239,7 +255,7 @@ public class LxxRobot implements APoint {
                 "\n    speed=" + speed +
                 "\n    acceleration=" + acceleration +
                 "\n    movementDirection=" + movementDirection +
-                "\n    bullets=" + bullets +
+                "\n    hitBullets=" + hitBullets +
                 '}';
     }
 
@@ -278,25 +294,32 @@ public class LxxRobot implements APoint {
         }
 
         if (acceleration < -Rules.DECELERATION || acceleration > Rules.ACCELERATION) {
-            if (prevState.lastScanTime + 1 == curState.time) {
-                // todo: implement me
+            if (!isHitWall(prevState, curState)) {
+                acceleration = LxxUtils.limit(Rules.DECELERATION, acceleration, Rules.ACCELERATION);
+                if (prevState.lastScanTime + 1 == curState.time) {
+                    assert acceleration >= -Rules.DECELERATION && acceleration <= Rules.ACCELERATION;
+                }
             }
-            acceleration = LxxUtils.limit(Rules.DECELERATION, acceleration, Rules.ACCELERATION);
         }
 
         return acceleration;
     }
 
-    private static boolean isHitWall(LxxRobot prevState, APoint curPos, double curVelocity) {
+    private static boolean isHitWall(LxxRobot prevState, LxxRobotInfo currentState) {
         if (prevState.position == null) {
             return false;
         }
 
-        if (abs(prevState.velocity) - abs(curVelocity) > Rules.DECELERATION) {
+        if (currentState.time - prevState.time > 1) {
+            return false;
+        }
+
+        if (abs(prevState.velocity) - abs(currentState.velocity) > Rules.DECELERATION) {
             return true;
         }
 
-        return prevState.position.distance(curPos) - curVelocity < -1.1;
+        return prevState.position.aDistance(currentState.position) - currentState.velocity < -1.1 &&
+                !prevState.rules.field.contains(currentState.position);
     }
 
     public double getTurnsToGunCool() {

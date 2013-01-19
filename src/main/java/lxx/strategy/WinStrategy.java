@@ -4,8 +4,6 @@ import lxx.model.BattleState;
 import lxx.utils.LxxConstants;
 import robocode.util.Utils;
 
-import java.awt.*;
-
 import static java.lang.Math.*;
 
 public class WinStrategy implements Strategy {
@@ -23,7 +21,7 @@ public class WinStrategy implements Strategy {
 
     @Override
     public TurnDecision getTurnDecision(BattleState bs) {
-        boolean match = bs.time > 10 && bs.getEnemyBullets().size() == 0 && !bs.enemy.alive;
+        boolean match = bs.time > 10 && bs.getEnemyBulletsInAir().size() == 0 && !bs.enemy.alive;
 
         if (match && winTime == -1L) {
             winTime = bs.time;

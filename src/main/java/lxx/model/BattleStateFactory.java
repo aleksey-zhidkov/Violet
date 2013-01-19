@@ -13,7 +13,8 @@ import static java.lang.Math.signum;
 
 public class BattleStateFactory {
 
-    private BattleStateFactory() {}
+    private BattleStateFactory() {
+    }
 
     public static BattleState updateState(BattleRules rules, BattleState battleState,
                                           RobotStatus status, Collection<Event> allEvents,
@@ -36,7 +37,7 @@ public class BattleStateFactory {
                 myInfo.returnedEnergy += returnedEnergy;
                 enemyInfo.receivedDmg += dmg;
                 enemyInfo.energy = bhe.getEnergy();
-                myInfo.bullets.add(bhe.getBullet());
+                myInfo.hitBullets.add(bhe.getBullet());
                 enemyInfo.name = bhe.getBullet().getVictim();
                 enemyInfo.alive = enemyInfo.energy > 0;
                 enemyInfo.position = new LxxPoint(bhe.getBullet().getX(), bhe.getBullet().getY());
@@ -49,14 +50,14 @@ public class BattleStateFactory {
                 final double returnedEnergy = LxxUtils.getReturnedEnergy(hbe.getPower());
                 enemyInfo.returnedEnergy += returnedEnergy;
                 myInfo.receivedDmg += dmg;
-                enemyInfo.bullets.add(hbe.getBullet());
+                enemyInfo.hitBullets.add(hbe.getBullet());
                 enemyInfo.name = hbe.getBullet().getName();
             } else if (e instanceof HitRobotEvent) {
                 myInfo.hitRobot = true;
                 enemyInfo.hitRobot = true;
             } else if (e instanceof HitWallEvent) {
                 final double expectedSpeed = getNewVelocity(battleState.me.velocity, lastTurnDecision.desiredVelocity);
-                myInfo.wallDmg += Rules.getWallHitDamage(expectedSpeed);
+                myInfo.wallDmg = Rules.getWallHitDamage(expectedSpeed);
             } else if (e instanceof RobotDeathEvent) {
                 enemyInfo.alive = false;
                 enemyInfo.energy = 0;
@@ -70,15 +71,36 @@ public class BattleStateFactory {
                 enemyInfo.alive = true;
             } else if (e instanceof BulletHitBulletEvent) {
                 final BulletHitBulletEvent bhbe = (BulletHitBulletEvent) e;
-                myInfo.bullets.add(bhbe.getBullet());
-                enemyInfo.bullets.add(bhbe.getHitBullet());
+                myInfo.interceptedBullets.add(bhbe.getBullet());
+                enemyInfo.interceptedBullets.add(bhbe.getHitBullet());
             }
         }
 
         final LxxRobot me = new LxxRobot(battleState.me, myInfo);
         final LxxRobot enemy = new LxxRobot(battleState.enemy, enemyInfo);
 
-        return new BattleState(battleState, me, enemy);
+        final BattleState newState = new BattleState(battleState, me, enemy);
+
+        if (newState.getEnemyHitBullets().size() != enemy.hitBullets.size()) {
+            new BattleState(battleState, me, enemy);
+            new BattleState(battleState, me, enemy);
+            assert !newState.enemy.alive || newState.getEnemyHitBullets().size() == enemy.hitBullets.size();
+        }
+        if (newState.getMyHitBullets().size() != me.hitBullets.size()) {
+            new BattleState(battleState, me, enemy);
+            new BattleState(battleState, me, enemy);
+            assert newState.getMyHitBullets().size() == me.hitBullets.size();
+        }
+
+        if (newState.getEnemyInterceptedBullets().size() != enemy.interceptedBullets.size()) {
+            assert newState.getEnemyInterceptedBullets().size() == enemy.interceptedBullets.size();
+        }
+        if (newState.getMyInterceptedBullets().size() != me.interceptedBullets.size()) {
+            new BattleState(battleState, me, enemy);
+            assert newState.getMyInterceptedBullets().size() == me.interceptedBullets.size();
+        }
+
+        return newState;
     }
 
     private static LxxRobotInfo getMyInfo(RobotStatus status) {

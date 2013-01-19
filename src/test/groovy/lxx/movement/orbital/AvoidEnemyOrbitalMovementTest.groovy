@@ -37,6 +37,8 @@ public class AvoidEnemyOrbitalMovementTest {
 
         myInfo.heading = LxxConstants.RADIANS_270;
         myInfo.velocity = -1;
+        myInfo.alive = true;
+        myInfo.time = me.time + 1;
         me = new LxxRobot(me, myInfo);
 
         movementDecision = aeom.getMovementDecision(me, new LxxPoint(200, 300), OrbitDirection.COUNTER_CLOCKWISE, enemy);

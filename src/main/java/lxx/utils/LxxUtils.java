@@ -117,7 +117,7 @@ public class LxxUtils {
     }
 
     public static double getMaxEscapeAngle(double bulletSpeed) {
-        return QuickMath.asin(Rules.MAX_VELOCITY / bulletSpeed) * 1.2;
+        return QuickMath.asin(Rules.MAX_VELOCITY / bulletSpeed) * 1.3;
     }
 
     public static double calculateAcceleration(LxxRobot prevState, LxxRobot curState) {
@@ -227,6 +227,26 @@ public class LxxUtils {
     public static <T> List<T> add(List<T> lst, T item) {
         lst.add(item);
         return lst;
+    }
+
+    public static LxxPoint[] toPoints(Rectangle2D rect) {
+        return new LxxPoint[]{
+                new LxxPoint(rect.getX(), rect.getY()),
+                new LxxPoint(rect.getX() + rect.getWidth(), rect.getY()),
+                new LxxPoint(rect.getX(), rect.getY() + rect.getHeight()),
+                new LxxPoint(rect.getX() + rect.getWidth(), rect.getY() + rect.getHeight())
+        };
+    }
+
+    public static boolean contains(LxxPoint center, double r, Rectangle2D rect) {
+        boolean res = true;
+
+        final double rSq = r * r;
+        for (LxxPoint pnt : toPoints(rect)) {
+            res &= center.distanceSq(pnt) < rSq;
+        }
+
+        return res;
     }
 
 }

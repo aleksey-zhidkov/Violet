@@ -3,6 +3,7 @@ package lxx.model
 import lxx.tests.LxxRobotFactory
 import lxx.tests.RobotStatusFactory
 import lxx.tests.TestConstants
+import lxx.tests.TestUtils
 import lxx.utils.BattleRules
 import lxx.utils.LxxConstants
 import lxx.utils.LxxPoint
@@ -41,14 +42,23 @@ class BattleStateFactoryTest {
 
     @Test
     public void testDeath() {
-        LxxRobot enemy = LxxRobotFactory.createMockLxxRobot(0,
-                ['energy': 100, 'position': new LxxPoint(10, 10), 'alive': true])
-        LxxRobot me = LxxRobotFactory.createMockLxxRobot(0,
-                ['energy': 100, 'position': new LxxPoint(100, 100), 'alive': true])
+        LxxRobot me = LxxRobotFactory.createMockRobot(0, [
+                'energy': 100,
+                'position': new LxxPoint(100, 100),
+                'alive': true
+        ])
+
+        LxxRobot enemy = LxxRobotFactory.createMockRobot(0, [
+                'energy': 100,
+                'position': new LxxPoint(10, 10),
+                'alive': true,
+        ])
+
         def battleState1 = new BattleState(TestConstants.stdDuelBattleRules, me, enemy)
+        TestUtils.setFinal(battleState1.enemyBullets, BattleState.WavesState.getField('inAir'), [new LxxWave(enemy, me, 14.14, me.time)])
         RobotStatus status = RobotStatusFactory.createRobotStatus(['energy': me.energy, 'time': me.time + 1]);
         def state = BattleStateFactory.updateState(TestConstants.stdDuelBattleRules, battleState1, status,
-                [new DeathEvent(), new HitByBulletEvent(0, new Bullet(0, 0, 0, 1, 'enemy', 'me', true, 1))],
+                [new DeathEvent(), new HitByBulletEvent(0, new Bullet(0, 0, 0, LxxUtils.getBulletPower(14.14), 'enemy', 'me', true, 1))],
                 null)
         assertEquals(0.0d, state.enemy.firePower, Utils.NEAR_DELTA)
     }
@@ -56,16 +66,18 @@ class BattleStateFactoryTest {
     @Test
     public void testMyAndEnemyHit() {
         long timeToCoolGun = LxxConstants.INITIAL_GUN_HEAT / TestConstants.stdDuelBattleRules.gunCoolingRate + 1
-        LxxRobot enemy = LxxRobotFactory.createMockLxxRobot(timeToCoolGun,
-                ['energy': 100, 'position': new LxxPoint(10, 10), 'alive': true])
-        LxxRobot me = LxxRobotFactory.createMockLxxRobot(timeToCoolGun,
+        LxxRobot enemy = LxxRobotFactory.createMockRobot(timeToCoolGun,
+                ['energy': 0.1, 'position': new LxxPoint(10, 10), 'alive': true])
+        LxxRobot me = LxxRobotFactory.createMockRobot(timeToCoolGun,
                 ['energy': 100, 'position': new LxxPoint(100, 100), 'alive': true])
         def battleState1 = new BattleState(TestConstants.stdDuelBattleRules, me, enemy)
+        TestUtils.setFinal(battleState1.myBullets, BattleState.WavesState.getField('inAir'), [new LxxWave(enemy, me, 14.14, me.time)])
+        TestUtils.setFinal(battleState1.enemyBullets, BattleState.WavesState.getField('inAir'), [new LxxWave(enemy, me, 14.14, me.time)])
         RobotStatus status = RobotStatusFactory.createRobotStatus(['energy': me.energy, 'time': me.time + 1]);
         def state = BattleStateFactory.updateState(TestConstants.stdDuelBattleRules, battleState1, status,
                 [new RobotDeathEvent("enemy"),
-                        new HitByBulletEvent(0, new Bullet(0, 0, 0, 1, 'enemy', 'me', true, 1)),
-                        new BulletHitEvent('enemy', 0, new Bullet(0, 0, 0, 1, 'me', 'enemy', true, 1))],
+                        new HitByBulletEvent(0, new Bullet(0, 0, 0, LxxUtils.getBulletPower(14.14), 'enemy', 'me', true, 1)),
+                        new BulletHitEvent('enemy', 0, new Bullet(0, 0, 0, LxxUtils.getBulletPower(14.14), 'me', 'enemy', true, 1))],
                 null)
         assertEquals(0.0d, state.enemy.firePower, Utils.NEAR_DELTA)
     }
@@ -110,6 +122,8 @@ class BattleStateFactoryTest {
             }
         });
         allEvents.add(new BulletHitEvent(null, enemy.energy - Rules.getBulletDamage(bulletPower), new Bullet(0, 0, 0, bulletPower, null, null, false, -1)));
+
+        TestUtils.setFinal(initialState.myBullets, BattleState.WavesState.getField('inAir'), [new LxxWave(enemy, me, Rules.getBulletSpeed(bulletPower), me.time)])
 
         final BattleState newState = BattleStateFactory.updateState(rules, initialState, status, allEvents, null);
 
@@ -157,6 +171,8 @@ class BattleStateFactoryTest {
             }
         });
         allEvents.add(new HitByBulletEvent(0, new Bullet(0, 0, 0, bulletPower, null, null, false, -1)));
+
+        TestUtils.setFinal(initialState.enemyBullets, BattleState.WavesState.getField('inAir'), [new LxxWave(enemy, me, Rules.getBulletSpeed(bulletPower), me.time)])
 
         final BattleState newState = BattleStateFactory.updateState(rules, initialState, status, allEvents, null);
 

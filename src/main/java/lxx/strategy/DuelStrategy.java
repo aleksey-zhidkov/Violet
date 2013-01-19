@@ -23,7 +23,7 @@ public class DuelStrategy implements Strategy {
 
     @Override
     public TurnDecision getTurnDecision(BattleState battleState) {
-        if (!battleState.enemy.alive && battleState.getEnemyBullets().size() == 0 ||
+        if (!battleState.enemy.alive && battleState.getEnemyBullets(battleState.me, 0, 1).size() == 0 ||
                 LxxRobot.UNKNOWN_ENEMY.equals(battleState.enemy.name)) {
             return null;
         }
