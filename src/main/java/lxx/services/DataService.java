@@ -1,11 +1,9 @@
 package lxx.services;
 
-import lxx.model.BattleState;
-
-import java.util.ArrayList;
+import lxx.model.BattleState2;
 
 public interface DataService {
 
-    void updateData(BattleState state);
+    void updateData(BattleState2 state);
 
 }

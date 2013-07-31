@@ -39,6 +39,28 @@ public class LxxRobot implements APoint {
     public final BattleRules rules;
     public final String name;
 
+    public LxxRobot(BattleRules rules, LxxRobotInfo info) {
+        this.rules = rules;
+        energy = info.energy;
+        gunHeat = info.gunHeat.getOr(new IllegalArgumentException("Empty gun heat"));
+        alive = info.alive;
+        name = info.name;
+        position = info.position;
+        velocity = info.velocity;
+        heading = info.heading;
+        lastScanTime = info.lastScanTime;
+        time = info.time;
+        round = info.round;
+        radarHeading = info.radarHeading;
+        gunHeading = info.gunHeading;
+        firePower = info.firePower.getOr(new IllegalArgumentException("Empty fire power"));
+        speed = info.speed;
+        acceleration = info.acceleration;
+        movementDirection = info.movementDirection;
+        hitBullets = info.hitBullets;
+        interceptedBullets = info.interceptedBullets;
+    }
+
     public LxxRobot(BattleRules rules, String name) {
         this.rules = rules;
 
@@ -64,8 +86,6 @@ public class LxxRobot implements APoint {
 
         hitBullets = new LinkedList<Bullet>();
         interceptedBullets = new LinkedList<Bullet>();
-
-        assert gunHeat >= 0 && gunHeat <= rules.initialGunHeat : gunHeat;
     }
 
     public LxxRobot(LxxRobot prevState, long time) {
@@ -135,25 +155,22 @@ public class LxxRobot implements APoint {
         }
 
         final boolean canFire = prevState.gunHeat - rules.gunCoolingRate * (currentState.time - prevState.time) <= 0 && prevState.alive;
-        final boolean firedForSure = energy < prevState.energy && currentState.time == prevState.time + 1 &&
-                currentState.receivedDmg == 0 && currentState.returnedEnergy == 0 && !isHitWall && !currentState.hitRobot;
-        if (firedForSure || (canFire && energy < expectedEnergy)) {
-            firePower = LxxUtils.limit(0.1, expectedEnergy - energy, Rules.MAX_BULLET_POWER);
-            assert isHitWall || firePower > 0 && firePower <= 3 : firePower;
+        if (currentState.gunHeat.defined()) {
+            firePower = currentState.firePower.getOr(0D);
+            gunHeat = currentState.gunHeat.get();
+        } else if (canFire && energy < expectedEnergy) {
+            firePower = expectedEnergy - energy;
             gunHeat = Rules.getGunHeat(firePower) - rules.gunCoolingRate;
         } else {
             firePower = 0;
-            if (alive) {
-                gunHeat = max(0, prevState.gunHeat - rules.gunCoolingRate * (currentState.time - prevState.time)); // TODO (azhidkov): add tests
-            } else {
-                gunHeat = prevState.gunHeat;
-            }
+            gunHeat = max(0, prevState.gunHeat - rules.gunCoolingRate * (currentState.time - prevState.time)); // TODO (azhidkov): add tests
         }
 
         hitBullets = Collections.unmodifiableList(currentState.hitBullets);
         interceptedBullets = Collections.unmodifiableList(currentState.interceptedBullets);
         name = currentState.name;
 
+        assert firePower >= 0 && firePower <= 3 : firePower;
         assert gunHeat >= 0 && gunHeat <= rules.initialGunHeat : gunHeat;
         assert gunHeat < prevState.gunHeat || prevState.gunHeat < rules.gunCoolingRate || !alive || prevState.time != currentState.time - 1;
     }
@@ -163,7 +180,7 @@ public class LxxRobot implements APoint {
                 turnRate <= Rules.getTurnRateRadians(original.speed)
                 : turnRate + ":" + original.speed;
 
-        velocity = getNewVelocity(original.velocity, desiredVelocity);
+        velocity = LxxUtils.getNewVelocity(original.velocity, desiredVelocity);
         speed = abs(velocity);
         heading = original.heading + turnRate;
         position = (LxxPoint) original.project(heading, velocity);
@@ -183,20 +200,6 @@ public class LxxRobot implements APoint {
         interceptedBullets = null;
         rules = null;
         name = null;
-    }
-
-    private static double getNewVelocity(double currentVelocity, double desiredVelocity) {
-        if (currentVelocity == 0 || signum(currentVelocity) == signum(desiredVelocity)) {
-            final double desiredAcceleration = abs(desiredVelocity) - abs(currentVelocity);
-            return LxxUtils.limit(-Rules.MAX_VELOCITY,
-                    currentVelocity + LxxUtils.limit(-Rules.DECELERATION, desiredAcceleration, Rules.ACCELERATION) * signum(desiredVelocity),
-                    Rules.MAX_VELOCITY);
-        } else if (abs(currentVelocity) >= Rules.DECELERATION) {
-            return (currentVelocity - Rules.DECELERATION * (signum(currentVelocity)));
-        } else {
-            final double acceleration = 1 - abs(currentVelocity) / Rules.DECELERATION;
-            return acceleration * signum(desiredVelocity);
-        }
     }
 
     @Override

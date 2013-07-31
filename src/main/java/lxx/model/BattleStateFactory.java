@@ -1,9 +1,11 @@
 package lxx.model;
 
+import lxx.Violet;
 import lxx.strategy.TurnDecision;
 import lxx.utils.BattleRules;
 import lxx.utils.LxxPoint;
 import lxx.utils.LxxUtils;
+import lxx.utils.func.Option;
 import robocode.*;
 
 import java.util.Collection;
@@ -45,7 +47,6 @@ public class BattleStateFactory {
                 myInfo.alive = false;
             } else if (e instanceof HitByBulletEvent) {
                 final HitByBulletEvent hbe = (HitByBulletEvent) e;
-                // TODO (azhidkov): LxxUtils.getReturnedEnergy
                 final double dmg = Rules.getBulletDamage(hbe.getPower());
                 final double returnedEnergy = LxxUtils.getReturnedEnergy(hbe.getPower());
                 enemyInfo.returnedEnergy += returnedEnergy;
@@ -73,6 +74,11 @@ public class BattleStateFactory {
                 final BulletHitBulletEvent bhbe = (BulletHitBulletEvent) e;
                 myInfo.interceptedBullets.add(bhbe.getBullet());
                 enemyInfo.interceptedBullets.add(bhbe.getHitBullet());
+            } else if (e instanceof CustomEvent) {
+                final Condition condition = ((CustomEvent) e).getCondition();
+                if (condition instanceof Violet.FireCondition) {
+                    myInfo.firePower = Option.of(((Violet.FireCondition)condition).bullet.getPower());
+                }
             }
         }
 
@@ -114,6 +120,7 @@ public class BattleStateFactory {
         myInfo.time = status.getTime();
         myInfo.round = status.getRoundNum();
         myInfo.velocity = status.getVelocity();
+        myInfo.gunHeat = Option.of(status.getGunHeat());
 
         return myInfo;
     }

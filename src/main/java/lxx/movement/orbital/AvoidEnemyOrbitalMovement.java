@@ -1,6 +1,6 @@
 package lxx.movement.orbital;
 
-import lxx.model.LxxRobot;
+import lxx.model.LxxRobot2;
 import lxx.movement.MovementDecision;
 import lxx.utils.APoint;
 import lxx.utils.LxxPoint;
@@ -15,7 +15,7 @@ public class AvoidEnemyOrbitalMovement {
         this.orbitalMovement = orbitalMovement;
     }
 
-    public MovementDecision getMovementDecision(LxxRobot me, APoint center, OrbitDirection direction, LxxRobot enemy) {
+    public MovementDecision getMovementDecision(LxxRobot2 me, APoint center, OrbitDirection direction, LxxRobot2 enemy) {
         MovementDecision movementDecision = orbitalMovement.getMovementDecision(me, center, direction);
 
         if (enemy != null) {

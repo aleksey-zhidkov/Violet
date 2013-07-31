@@ -1,6 +1,6 @@
 package lxx.strategy;
 
-import lxx.model.BattleState;
+import lxx.model.BattleState2;
 import lxx.model.LxxRobot;
 import robocode.Rules;
 
@@ -11,13 +11,13 @@ public class FindEnemyStrategy implements Strategy {
 
     private final int turnDirection;
 
-    public FindEnemyStrategy(BattleState bs) {
+    public FindEnemyStrategy(BattleState2 bs) {
         turnDirection = (int) signum(normalRelativeAngle(bs.me.angleTo(bs.rules.field.center) - bs.me.radarHeading));
     }
 
     @Override
-    public TurnDecision getTurnDecision(BattleState state) {
-        if (!LxxRobot.UNKNOWN_ENEMY.equals(state.enemy.name)) {
+    public TurnDecision getTurnDecision(BattleState2 state) {
+        if (!LxxRobot.UNKNOWN_ENEMY.equals(state.opponent.name) && state.time -state.opponent.lastScanTime < 3) {
             return null;
         }
 

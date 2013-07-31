@@ -73,7 +73,7 @@ public class BattleField {
         right.clockwiseWall = bottom;
         right.counterClockwiseWall = top;
 
-        availableBattleFieldRectangle = new Rectangle2D.Double(x - 1, y - 1, width + 2, height + 2);
+        availableBattleFieldRectangle = new Rectangle2D.Double(x, y, width, height);
 
         center = new LxxPoint(rightX / 2, topY / 2);
 

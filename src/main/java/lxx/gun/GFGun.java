@@ -1,6 +1,6 @@
 package lxx.gun;
 
-import lxx.model.BattleState;
+import lxx.model.BattleState2;
 import lxx.services.GFMovementLogService;
 import lxx.utils.ScoredBearingOffset;
 import robocode.util.Utils;
@@ -19,22 +19,22 @@ public class GFGun implements Gun {
     }
 
     @Override
-    public Double getGunTurnAngle(BattleState state, double bulletSpeed) {
+    public Double getGunTurnAngle(BattleState2 state, double bulletSpeed) {
         final double targetAngle;
-        if (state.me.getTurnsToGunCool() > 2 | state.enemy.energy == 0) {
+        if (state.me.getTurnsToGunCool() > 2 || state.opponent.energy == 0) {
             bearingOffset = null;
-            targetAngle = state.me.angleTo(state.enemy);
+            targetAngle = state.me.angleTo(state.opponent);
         } else {
             if (bearingOffset == null) {
                 bearingOffset = getBearingOffset(state, bulletSpeed);
             }
-            targetAngle = state.me.angleTo(state.enemy) + bearingOffset;
+            targetAngle = state.me.angleTo(state.opponent) + bearingOffset;
         }
 
         return Utils.normalRelativeAngle(targetAngle - state.me.gunHeading);
     }
 
-    private Double getBearingOffset(BattleState state, double bulletSpeed) {
+    private Double getBearingOffset(BattleState2 state, double bulletSpeed) {
         final List<ScoredBearingOffset> visits = logService.getVisits(state, bulletSpeed);
         if (visits.size() == 0) {
             return 0d;

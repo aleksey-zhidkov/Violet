@@ -1,7 +1,7 @@
 package lxx.strategy;
 
 import lxx.gun.Gun;
-import lxx.model.BattleState;
+import lxx.model.BattleState2;
 import lxx.model.LxxRobot;
 import lxx.movement.MovementDecision;
 import lxx.movement.WaveSurfingMovement;
@@ -22,9 +22,9 @@ public class DuelStrategy implements Strategy {
     }
 
     @Override
-    public TurnDecision getTurnDecision(BattleState battleState) {
-        if (!battleState.enemy.alive && battleState.getEnemyBullets(battleState.me, 0, 1).size() == 0 ||
-                LxxRobot.UNKNOWN_ENEMY.equals(battleState.enemy.name)) {
+    public TurnDecision getTurnDecision(BattleState2 battleState) {
+        if (!battleState.opponent.alive && battleState.opponentBulletsInAir.size() == 0 ||
+                LxxRobot.UNKNOWN_ENEMY.equals(battleState.opponent.name)) {
             return null;
         }
 
@@ -36,13 +36,13 @@ public class DuelStrategy implements Strategy {
                 bulletPower, getRadarTurnAngleRadians(battleState));
     }
 
-    public double getRadarTurnAngleRadians(BattleState battleState) {
-        final double angleToTarget = battleState.me.angleTo(battleState.enemy);
+    public double getRadarTurnAngleRadians(BattleState2 battleState) {
+        final double angleToTarget = battleState.me.angleTo(battleState.opponent);
         final double sign = (angleToTarget != battleState.me.radarHeading)
                 ? signum(Utils.normalRelativeAngle(angleToTarget - battleState.me.radarHeading))
                 : 1;
 
-        return Utils.normalRelativeAngle(angleToTarget - battleState.me.radarHeading + LxxConstants.RADIANS_5 * sign);
+        return Utils.normalRelativeAngle(angleToTarget - battleState.me.radarHeading + LxxConstants.RADIANS_10 * sign);
     }
 
 

@@ -4,9 +4,10 @@ import ags.utils.KdTree;
 import lxx.gun.GFGun;
 import lxx.logs.KdTreeMovementLog;
 import lxx.logs.SimpleLocationFactory;
-import lxx.model.BattleState;
-import lxx.model.BattleStateFactory;
-import lxx.model.LxxRobot;
+import lxx.model.BattleState2;
+import lxx.model.BattleStateFactory2;
+import lxx.model.LxxBullet2;
+import lxx.model.LxxWave2;
 import lxx.movement.WaveSurfingMovement;
 import lxx.movement.orbital.AvoidEnemyOrbitalMovement;
 import lxx.movement.orbital.OrbitalMovement;
@@ -19,10 +20,11 @@ import lxx.services.MonitoringService;
 import lxx.strategy.*;
 import lxx.utils.BattleRules;
 import lxx.utils.GuessFactor;
+import lxx.utils.LxxConstants;
 import lxx.utils.LxxUtils;
+import lxx.utils.func.Option;
 import robocode.*;
 import robocode.Event;
-import robocode.util.Utils;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -54,7 +56,7 @@ public class Violet extends AdvancedRobot {
 
     private List<DataService> services;
 
-    private BattleState battleState;
+    private BattleState2 battleState2;
     private BattleRules rules;
     private Strategy[] strategies;
     private TurnDecision turnDecision;
@@ -76,18 +78,18 @@ public class Violet extends AdvancedRobot {
         setAdjustRadarForGunTurn(true);
 
         strategies = new Strategy[]{
-                new FindEnemyStrategy(battleState)
+                new FindEnemyStrategy(battleState2)
         };
         services = new ArrayList<DataService>(0);
 
-        while (battleState.me.alive) {
+        while (battleState2.me.alive) {
 
-            if (!LxxRobot.UNKNOWN_ENEMY.equals(battleState.enemy.name) && services.size() == 0) {
+            if (battleState2.opponent.known() && services.size() == 0) {
                 initStrategies();
             }
 
             for (DataService service : services) {
-                service.updateData(battleState);
+                service.updateData(battleState2);
             }
 
             doTurn();
@@ -105,14 +107,14 @@ public class Violet extends AdvancedRobot {
         final KdTreeMovementLog<GuessFactor> mySimpleMovementLog =
                 new KdTreeMovementLog<GuessFactor>((KdTree<GuessFactor>) staticData.get(MY_MOVEMENT_SIMPLE), simpleLocFactory);
 
-        final GFMovementLogServiceImpl enemyLogService = new GFMovementLogServiceImpl(enemySimpleMovementLog, battleState.me.name, battleState.enemy.name);
+        final GFMovementLogServiceImpl enemyLogService = new GFMovementLogServiceImpl(enemySimpleMovementLog, battleState2.me.name, battleState2.opponent.name);
         final DangerService dangerService = new DangerService(mySimpleMovementLog);
 
         final WaveSurfingMovement waveSurfingMovement =
-                new WaveSurfingMovement(dangerService, new AvoidEnemyOrbitalMovement(new OrbitalMovement(battleState.rules.field, 800)));
+                new WaveSurfingMovement(dangerService, new AvoidEnemyOrbitalMovement(new OrbitalMovement(battleState2.rules.field, 800)));
 
         strategies = new Strategy[]{
-                new FindEnemyStrategy(battleState),
+                new FindEnemyStrategy(battleState2),
                 new DuelStrategy(waveSurfingMovement, new GFGun(enemyLogService)),
                 new WinStrategy()
         };
@@ -125,7 +127,7 @@ public class Violet extends AdvancedRobot {
 
     private void doTurn() {
         for (Strategy s : strategies) {
-            turnDecision = s.getTurnDecision(battleState);
+            turnDecision = s.getTurnDecision(battleState2);
             if (turnDecision == null) {
                 continue;
             }
@@ -151,6 +153,7 @@ public class Violet extends AdvancedRobot {
             if (abs(getGunTurnRemaining()) > 1) {
             } else if (turnDecision.firePower != null) {
                 firedBullet = setFireBullet(turnDecision.firePower);
+                addCustomEvent(new FireCondition(firedBullet));
             } else {
                 aimGun(turnDecision);
             }
@@ -171,35 +174,26 @@ public class Violet extends AdvancedRobot {
     @Override
     public void onStatus(StatusEvent se) {
         if (rules == null) {
-            rules = new BattleRules(getBattleFieldWidth(), getBattleFieldHeight(), getWidth(),
+            rules = new BattleRules(getBattleFieldWidth(), getBattleFieldHeight(), LxxConstants.ROBOT_SIDE_SIZE,
                     se.getStatus().getGunHeat(), getGunCoolingRate(), se.getStatus().getEnergy(), getName());
+            battleState2 = new BattleState2(rules, se.getTime(), null,
+                    null, null,
+                    Option.<LxxWave2>none(), Option.<LxxWave2>none(),
+                    Collections.<LxxWave2>emptyList(), Collections.<LxxWave2>emptyList(),
+                    Collections.<LxxBullet2>emptyList(), Collections.<LxxBullet2>emptyList(),
+                    Collections.<LxxBullet2>emptyList(), Collections.<LxxBullet2>emptyList(),
+                    Collections.<LxxWave2>emptyList(), Collections.<LxxWave2>emptyList());
         }
         final Vector<Event> allEvents = getAllEvents();
         final Vector<Event> allEventsCp = new Vector<Event>(allEvents);
         allEventsCp.add(se);
         allEventsList.add(allEventsCp);
-        final BattleState newBattleState = BattleStateFactory.updateState(rules, battleState, se.getStatus(), allEvents, turnDecision);
-
-        if (newBattleState.time != se.getTime()) {
-            BattleStateFactory.updateState(rules, battleState, se.getStatus(), allEvents, turnDecision);
+        try {
+            battleState2 = BattleStateFactory2.updateState(rules, battleState2, se.getStatus(), allEvents, turnDecision);
+        } catch (RuntimeException t) {
+            t.printStackTrace();
+            throw t;
         }
-
-        if (firedBullet == null ^ newBattleState.getRobotFiredBullet(newBattleState.me.name) == null ||
-                firedBullet != null ^ newBattleState.getRobotFiredBullet(newBattleState.me.name) != null) {
-            BattleStateFactory.updateState(rules, battleState, se.getStatus(), allEvents, turnDecision);
-        }
-
-        if (!Utils.isNear(se.getStatus().getGunHeat(), newBattleState.me.gunHeat)) {
-            BattleStateFactory.updateState(rules, battleState, se.getStatus(), allEvents, turnDecision);
-        }
-
-        assert newBattleState.time == se.getTime();
-        assert newBattleState.me.time == se.getTime();
-        assert !newBattleState.me.alive || Utils.isNear(se.getStatus().getGunHeat(), newBattleState.me.gunHeat);
-        assert !newBattleState.me.alive || (firedBullet == null && newBattleState.getRobotFiredBullet(newBattleState.me.name) == null ||
-                firedBullet != null && newBattleState.getRobotFiredBullet(newBattleState.me.name) != null);
-
-        battleState = newBattleState;
     }
 
     @Override
@@ -218,6 +212,21 @@ public class Violet extends AdvancedRobot {
 
         for (Canvas c : Canvas.values()) {
             c.exec(lg);
+        }
+    }
+
+    public class FireCondition extends Condition {
+
+        public final Bullet bullet;
+
+        public FireCondition(Bullet firedBullet) {
+            this.bullet = firedBullet;
+        }
+
+        @Override
+        public boolean test() {
+            removeCustomEvent(this);
+            return true;
         }
     }
 }

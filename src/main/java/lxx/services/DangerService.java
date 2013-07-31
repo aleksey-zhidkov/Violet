@@ -2,12 +2,11 @@ package lxx.services;
 
 import ags.utils.KdTree;
 import lxx.logs.MovementLog;
-import lxx.model.BattleState;
-import lxx.model.LxxBullet;
+import lxx.model.BattleState2;
+import lxx.model.LxxBullet2;
+import lxx.model.LxxWave2;
 import lxx.paint.Canvas;
 import lxx.paint.Circle;
-import lxx.utils.ScoredBearingOffset;
-import lxx.model.LxxWave;
 import lxx.utils.*;
 import lxx.utils.func.F1;
 import robocode.util.Utils;
@@ -21,7 +20,7 @@ import static java.lang.Math.abs;
 
 public class DangerService implements DataService {
 
-    private final Map<LxxWave, WaveDangerInfoImpl> waveDangerInfos = new LxxHashMap<LxxWave, WaveDangerInfoImpl>(new createWaveDangerInfo());
+    private final Map<LxxWave2, WaveDangerInfoImpl> waveDangerInfos = new LxxHashMap<LxxWave2, WaveDangerInfoImpl>(new createWaveDangerInfo());
 
     private final MovementLog<GuessFactor> simpleHitsLog;
 
@@ -30,18 +29,20 @@ public class DangerService implements DataService {
     }
 
     @Override
-    public void updateData(BattleState state) {
-        for (LxxBullet bullet : state.getEnemyHitBullets()) {
-            simpleHitsLog.addEntry(state.enemy, state.me, new GuessFactor(Utils.normalRelativeAngle(bullet.heading - bullet.wave.noBearingOffset), LxxUtils.getMaxEscapeAngle(bullet.speed),
+    public void updateData(BattleState2 state) {
+        final List<LxxBullet2> bullets = new ArrayList<LxxBullet2>(state.opponentHitBullets);
+        bullets.addAll(state.opponentInterceptedBullets);
+        for (LxxBullet2 bullet : bullets) {
+            simpleHitsLog.addEntry(state.opponent, state.me, new GuessFactor(Utils.normalRelativeAngle(bullet.heading - bullet.wave.noBearingOffset), LxxUtils.getMaxEscapeAngle(bullet.speed),
                     LxxUtils.lateralDirection(bullet.wave, bullet.wave.victim)));
         }
 
-        for (LxxWave goneWave : state.getEnemyGoneWaves()) {
+        for (LxxWave2 goneWave : state.opponentGoneBullets) {
             waveDangerInfos.remove(goneWave);
         }
     }
 
-    public WaveDangerInfo getWaveDangerInfo(final LxxWave wave) {
+    public WaveDangerInfo getWaveDangerInfo(final LxxWave2 wave) {
 
         if (wave.time > wave.launcher.time) {
             return new WaveDangerInfo() {
@@ -59,7 +60,7 @@ public class DangerService implements DataService {
         return waveDangerInfos.get(wave);
     }
 
-    private double getPointDanger(LxxWave wave, APoint pnt, List<ScoredBearingOffset> predictedBearingOffsets) {
+    private double getPointDanger(LxxWave2 wave, APoint pnt, List<ScoredBearingOffset> predictedBearingOffsets) {
         if (predictedBearingOffsets.size() == 0) {
             return 0;
         }
@@ -89,14 +90,14 @@ public class DangerService implements DataService {
         return bulletsDanger;
     }
 
-    private class createWaveDangerInfo implements F1<LxxWave, WaveDangerInfoImpl> {
+    private class createWaveDangerInfo implements F1<LxxWave2, WaveDangerInfoImpl> {
         @Override
-        public WaveDangerInfoImpl f(LxxWave lxxWave) {
+        public WaveDangerInfoImpl f(LxxWave2 lxxWave) {
             return new WaveDangerInfoImpl(lxxWave,
                     visits(lxxWave, simpleHitsLog.getEntries(lxxWave.launcher, lxxWave.victim, simpleHitsLog.size())));
         }
 
-        private List<ScoredBearingOffset> visits(LxxWave wave, List<KdTree.Entry<GuessFactor>> entries) {
+        private List<ScoredBearingOffset> visits(LxxWave2 wave, List<KdTree.Entry<GuessFactor>> entries) {
             final ArrayList<ScoredBearingOffset> visits = new ArrayList<ScoredBearingOffset>();
 
             if (entries.size() == 0) {
@@ -119,10 +120,10 @@ public class DangerService implements DataService {
 
     private class WaveDangerInfoImpl implements WaveDangerInfo {
 
-        private final LxxWave wave;
+        private final LxxWave2 wave;
         private final List<ScoredBearingOffset> bos;
 
-        private WaveDangerInfoImpl(LxxWave wave, List<ScoredBearingOffset> bos) {
+        private WaveDangerInfoImpl(LxxWave2 wave, List<ScoredBearingOffset> bos) {
             this.wave = wave;
             this.bos = bos;
         }

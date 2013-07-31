@@ -1,9 +1,9 @@
 package lxx.gun;
 
-import lxx.model.BattleState;
+import lxx.model.BattleState2;
 
 public interface Gun {
 
-    Double getGunTurnAngle(BattleState state, double bulletSpeed);
+    Double getGunTurnAngle(BattleState2 state, double bulletSpeed);
 
 }

@@ -4,7 +4,6 @@ import lxx.utils.APoint;
 
 import java.awt.*;
 
-import static java.lang.Math.max;
 import static java.lang.Math.round;
 
 public class LxxGraphics {

@@ -4,19 +4,20 @@ import lxx.utils.APoint;
 import lxx.utils.LxxPoint;
 import lxx.utils.LxxUtils;
 import lxx.utils.Vector2D;
+import lxx.utils.func.F1;
 import robocode.util.Utils;
 
 import static java.lang.Math.abs;
 
-public class LxxWave implements APoint {
+public class LxxWave2 implements APoint {
 
-    public final LxxRobot launcher;
-    public final LxxRobot victim;
+    public final LxxRobot2 launcher;
+    public final LxxRobot2 victim;
     public final double noBearingOffset;
     public final double speed;
     public final long time;
 
-    public LxxWave(LxxRobot launcher, LxxRobot victim, double speed, long time) {
+    public LxxWave2(LxxRobot2 launcher, LxxRobot2 victim, double speed, long time) {
         this.launcher = launcher;
         this.victim = victim;
         this.noBearingOffset = launcher.angleTo(victim);
@@ -72,7 +73,7 @@ public class LxxWave implements APoint {
         return (distance(pnt) - getTraveledDistance(time)) / speed;
     }
 
-    public double getFlightTime(LxxRobot robot) {
+    public double getFlightTime(LxxRobot2 robot) {
         return getFlightTime(robot.position, robot.time);
     }
 
@@ -89,7 +90,7 @@ public class LxxWave implements APoint {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LxxWave lxxWave = (LxxWave) o;
+        LxxWave2 lxxWave = (LxxWave2) o;
 
         if (time != lxxWave.time) return false;
         if (launcher != null ? !launcher.equals(lxxWave.launcher) : lxxWave.launcher != null) return false;
@@ -106,8 +107,24 @@ public class LxxWave implements APoint {
         return result;
     }
 
-    public boolean isPassed(LxxRobot robot) {
+    public boolean isPassed(LxxRobot2 robot) {
         final double traveledDistance = getTraveledDistance(robot.time);
-        return false;
+        return traveledDistance > launcher.aDistance(robot) &&
+                !LxxUtils.getBoundingRectangleAt(robot).contains((LxxPoint)launcher.project(launcher.angleTo(robot), traveledDistance));
     }
+
+    public static class inAir implements F1<LxxWave2, Boolean> {
+
+        private final LxxRobot2 robot;
+
+        public inAir(LxxRobot2 robot) {
+            this.robot = robot;
+        }
+
+        @Override
+        public Boolean f(LxxWave2 lxxWave2) {
+            return !lxxWave2.isPassed(robot);
+        }
+    }
+
 }

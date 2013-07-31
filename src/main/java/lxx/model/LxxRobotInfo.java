@@ -1,6 +1,7 @@
 package lxx.model;
 
 import lxx.utils.LxxPoint;
+import lxx.utils.func.Option;
 import robocode.Bullet;
 
 import java.util.LinkedList;
@@ -24,6 +25,12 @@ public class LxxRobotInfo {
     public double receivedDmg;
     public double returnedEnergy;
     public boolean hitRobot;
+    public Option<Double> gunHeat = Option.NONE;
+    public Option<Double> firePower = Option.NONE;
 
     public String name;
+    public long lastScanTime;
+    public double speed;
+    public double acceleration;
+    public double movementDirection;
 }

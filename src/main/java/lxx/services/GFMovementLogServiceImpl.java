@@ -2,11 +2,12 @@ package lxx.services;
 
 import ags.utils.KdTree;
 import lxx.logs.MovementLog;
-import lxx.model.BattleState;
-import lxx.model.LxxWave;
-import lxx.utils.ScoredBearingOffset;
+import lxx.model.BattleState2;
+import lxx.model.LxxWave2;
 import lxx.utils.GuessFactor;
 import lxx.utils.LxxUtils;
+import lxx.utils.ScoredBearingOffset;
+import lxx.utils.func.Option;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,22 +29,22 @@ public class GFMovementLogServiceImpl implements DataService, GFMovementLogServi
     }
 
     @Override
-    public void updateData(BattleState state) {
+    public void updateData(BattleState2 state) {
 
         final ArrayList<WavesService.WaveHitInterval> waveHitIntervals = wavesService.updateData(state);
 
         for (WavesService.WaveHitInterval waveHitInterval : waveHitIntervals) {
-            final LxxWave w = waveHitInterval.wave;
+            final LxxWave2 w = waveHitInterval.wave;
             log.addEntry(state.getRobot(observer), state.getRobot(observable), new GuessFactor(waveHitInterval.hitInterval.center(), LxxUtils.getMaxEscapeAngle(w.speed), LxxUtils.lateralDirection(w, w.victim)));
         }
 
-        final LxxWave firedBullet = state.getRobotFiredBullet(observer);
-        if (firedBullet != null) {
-            wavesService.registerWave(state.getRobotFiredBullet(observer));
+        final Option<LxxWave2> firedBullet = state.getRobotFiredBullet(observer);
+        if (firedBullet.defined()) {
+            wavesService.registerWave(firedBullet.get());
         }
     }
 
-    public List<ScoredBearingOffset> getVisits(BattleState state, double bulletSpeed) {
+    public List<ScoredBearingOffset> getVisits(BattleState2 state, double bulletSpeed) {
         final List<ScoredBearingOffset> visits = new ArrayList<ScoredBearingOffset>();
 
         final List<KdTree.Entry<GuessFactor>> entries = log.getEntries(state.getRobot(observer), state.getRobot(observable), (int) max(10, sqrt(log.size())));

@@ -1,6 +1,6 @@
 package lxx.logs;
 
-import lxx.model.LxxRobot;
+import lxx.model.LxxRobot2;
 import lxx.utils.LxxConstants;
 import lxx.utils.LxxUtils;
 import robocode.Rules;
@@ -13,7 +13,7 @@ public class SimpleLocationFactory implements LocationFactory {
     }
 
     @Override
-    public double[] getLocation(LxxRobot observer, LxxRobot observable) {
+    public double[] getLocation(LxxRobot2 observer, LxxRobot2 observable) {
         return new double[]{
                 observer.distance(observable) / observer.rules.field.fieldDiagonal,
                 LxxUtils.lateralVelocity(observer, observable) / Rules.MAX_VELOCITY,
