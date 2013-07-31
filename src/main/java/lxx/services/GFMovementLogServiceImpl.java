@@ -1,9 +1,13 @@
 package lxx.services;
 
 import ags.utils.KdTree;
+import lxx.events.BulletFiredEventListener;
+import lxx.events.TickEvent;
+import lxx.events.TickEventListener;
 import lxx.logs.MovementLog;
-import lxx.model.BattleState2;
-import lxx.model.LxxWave2;
+import lxx.model.BattleState;
+import lxx.model.LxxBullet;
+import lxx.model.LxxWave;
 import lxx.utils.GuessFactor;
 import lxx.utils.LxxUtils;
 import lxx.utils.ScoredBearingOffset;
@@ -15,7 +19,7 @@ import java.util.List;
 import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
-public class GFMovementLogServiceImpl implements DataService, GFMovementLogService {
+public class GFMovementLogServiceImpl implements TickEventListener, GFMovementLogService, BulletFiredEventListener {
 
     private final WavesService wavesService = new WavesService();
     private final MovementLog<GuessFactor> log;
@@ -29,22 +33,22 @@ public class GFMovementLogServiceImpl implements DataService, GFMovementLogServi
     }
 
     @Override
-    public void updateData(BattleState2 state) {
+    public void onTick(BattleState state) {
 
         final ArrayList<WavesService.WaveHitInterval> waveHitIntervals = wavesService.updateData(state);
 
         for (WavesService.WaveHitInterval waveHitInterval : waveHitIntervals) {
-            final LxxWave2 w = waveHitInterval.wave;
+            final LxxWave w = waveHitInterval.wave;
             log.addEntry(state.getRobot(observer), state.getRobot(observable), new GuessFactor(waveHitInterval.hitInterval.center(), LxxUtils.getMaxEscapeAngle(w.speed), LxxUtils.lateralDirection(w, w.victim)));
-        }
-
-        final Option<LxxWave2> firedBullet = state.getRobotFiredBullet(observer);
-        if (firedBullet.defined()) {
-            wavesService.registerWave(firedBullet.get());
         }
     }
 
-    public List<ScoredBearingOffset> getVisits(BattleState2 state, double bulletSpeed) {
+    @Override
+    public void onBulletFired(LxxBullet bullet) {
+        wavesService.registerWave(bullet.wave);
+    }
+
+    public List<ScoredBearingOffset> getVisits(BattleState state, double bulletSpeed) {
         final List<ScoredBearingOffset> visits = new ArrayList<ScoredBearingOffset>();
 
         final List<KdTree.Entry<GuessFactor>> entries = log.getEntries(state.getRobot(observer), state.getRobot(observable), (int) max(10, sqrt(log.size())));

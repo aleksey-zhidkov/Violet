@@ -1,6 +1,6 @@
 package lxx.strategy;
 
-import lxx.model.BattleState2;
+import lxx.model.BattleState;
 import lxx.utils.LxxConstants;
 import robocode.util.Utils;
 
@@ -12,8 +12,8 @@ public class WinStrategy implements Strategy {
     private static final double PARADE_HEADING = LxxConstants.RADIANS_90;
 
     @Override
-    public TurnDecision getTurnDecision(BattleState2 bs) {
-        boolean match = bs.opponentBulletsInAir.size() == 0 && !bs.opponent.alive;
+    public TurnDecision getTurnDecision(BattleState bs) {
+        boolean match = bs.opponent.bulletsInAir.size() == 0 && !bs.opponent.alive;
 
         if (match && winTime == -1L) {
             winTime = bs.time;
@@ -24,7 +24,7 @@ public class WinStrategy implements Strategy {
                 Utils.normalRelativeAngle(-bs.me.radarHeading));
     }
 
-    public double getTurnRemaining(BattleState2 bs) {
+    public double getTurnRemaining(BattleState bs) {
         double turnRemaining = Utils.normalRelativeAngle(PARADE_HEADING - bs.me.heading);
         if (abs(turnRemaining) > LxxConstants.RADIANS_90) {
             turnRemaining = Utils.normalRelativeAngle(PARADE_HEADING - Utils.normalAbsoluteAngle(bs.me.heading + Math.PI));

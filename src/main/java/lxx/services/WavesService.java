@@ -1,8 +1,8 @@
 package lxx.services;
 
-import lxx.model.BattleState2;
-import lxx.model.LxxRobot2;
-import lxx.model.LxxWave2;
+import lxx.model.BattleState;
+import lxx.model.LxxRobot;
+import lxx.model.LxxWave;
 import lxx.utils.APoint;
 import lxx.utils.IntervalDouble;
 import lxx.utils.LxxUtils;
@@ -14,18 +14,18 @@ import java.util.Map;
 
 public class WavesService {
 
-    private final Map<LxxWave2, IntervalDouble> waves = new HashMap<LxxWave2, IntervalDouble>();
+    private final Map<LxxWave, IntervalDouble> waves = new HashMap<LxxWave, IntervalDouble>();
 
-    public void registerWave(LxxWave2 wave) {
+    public void registerWave(LxxWave wave) {
         assert !waves.containsKey(wave);
         waves.put(wave, new IntervalDouble());
     }
 
-    public ArrayList<WaveHitInterval> updateData(BattleState2 state) {
+    public ArrayList<WaveHitInterval> updateData(BattleState state) {
         final ArrayList<WaveHitInterval> passedWaves = new ArrayList<WaveHitInterval>();
-        for (Iterator<LxxWave2> wavesIter = waves.keySet().iterator(); wavesIter.hasNext();) {
-            final LxxWave2 w = wavesIter.next();
-            final LxxRobot2 victimCurrentState = state.getRobot(w.victim.name);
+        for (Iterator<LxxWave> wavesIter = waves.keySet().iterator(); wavesIter.hasNext();) {
+            final LxxWave w = wavesIter.next();
+            final LxxRobot victimCurrentState = state.getRobot(w.victim.name);
             final APoint bulletPos = w.launcher.project(w.launcher.angleTo(victimCurrentState), w.getTraveledDistance(state.time));
             if (LxxUtils.getBoundingRectangleAt(victimCurrentState).contains(bulletPos.x(), bulletPos.y())) {
                 final IntervalDouble hitInterval = waves.get(w);
@@ -45,10 +45,10 @@ public class WavesService {
 
     public class WaveHitInterval {
 
-        public final LxxWave2 wave;
+        public final LxxWave wave;
         public final IntervalDouble hitInterval;
 
-        public WaveHitInterval(LxxWave2 wave, IntervalDouble hitInterval) {
+        public WaveHitInterval(LxxWave wave, IntervalDouble hitInterval) {
             this.wave = wave;
             this.hitInterval = hitInterval;
         }

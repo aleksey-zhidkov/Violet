@@ -4,6 +4,7 @@ import lxx.utils.APoint;
 import lxx.utils.LxxPoint;
 import lxx.utils.LxxUtils;
 import lxx.utils.Vector2D;
+import lxx.utils.func.F1;
 import robocode.util.Utils;
 
 import static java.lang.Math.abs;
@@ -108,6 +109,28 @@ public class LxxWave implements APoint {
 
     public boolean isPassed(LxxRobot robot) {
         final double traveledDistance = getTraveledDistance(robot.time);
-        return false;
+        return traveledDistance > launcher.aDistance(robot) &&
+                !LxxUtils.getBoundingRectangleAt(robot).contains((LxxPoint)launcher.project(launcher.angleTo(robot), traveledDistance));
     }
+
+    public boolean isPassed(LxxPoint pos, long time) {
+        final double traveledDistance = getTraveledDistance(time);
+        return traveledDistance > launcher.aDistance(pos) &&
+                !LxxUtils.getBoundingRectangleAt(pos).contains((LxxPoint)launcher.project(launcher.angleTo(pos), traveledDistance));
+    }
+
+    public static class inAir implements F1<LxxWave, Boolean> {
+
+        private final LxxRobot robot;
+
+        public inAir(LxxRobot robot) {
+            this.robot = robot;
+        }
+
+        @Override
+        public Boolean f(LxxWave lxxWave) {
+            return !lxxWave.isPassed(robot);
+        }
+    }
+
 }

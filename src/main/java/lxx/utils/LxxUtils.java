@@ -1,7 +1,6 @@
 package lxx.utils;
 
 import lxx.model.LxxRobot;
-import lxx.model.LxxRobot2;
 import robocode.Rules;
 import robocode.util.Utils;
 
@@ -48,7 +47,7 @@ public class LxxUtils {
         return value;
     }
 
-    public static double lateralDirection(APoint center, LxxRobot2 robot) {
+    public static double lateralDirection(APoint center, LxxRobot robot) {
         return lateralDirection(center, robot, robot.velocity, robot.heading);
     }
 
@@ -60,7 +59,7 @@ public class LxxUtils {
         return signum(lateralVelocity(center, pos, velocity, heading));
     }
 
-    public static double lateralVelocity(APoint center, LxxRobot2 robot) {
+    public static double lateralVelocity(APoint center, LxxRobot robot) {
         return lateralVelocity(center, robot, robot.velocity, robot.heading);
     }
 
@@ -70,7 +69,7 @@ public class LxxUtils {
         return velocity * QuickMath.sin(Utils.normalRelativeAngle(heading - center.angleTo(pos)));
     }
 
-    public static double advancingVelocity(APoint center, LxxRobot2 robot) {
+    public static double advancingVelocity(APoint center, LxxRobot robot) {
         return advancingVelocity(center, robot, robot.velocity, robot.heading);
     }
 

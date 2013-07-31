@@ -1,9 +1,9 @@
 package lxx.movement;
 
 import lxx.Violet;
-import lxx.model.BattleState2;
-import lxx.model.LxxRobot2;
-import lxx.model.LxxWave2;
+import lxx.model.BattleState;
+import lxx.model.LxxRobot;
+import lxx.model.LxxWave;
 import lxx.movement.orbital.AvoidEnemyOrbitalMovement;
 import lxx.movement.orbital.OrbitDirection;
 import lxx.paint.Canvas;
@@ -22,7 +22,6 @@ import java.util.List;
 import static java.lang.Math.min;
 import static java.lang.Math.signum;
 import static lxx.utils.LxxUtils.List;
-import static lxx.utils.func.LxxCollections.filter;
 
 public class WaveSurfingMovement {
 
@@ -39,27 +38,24 @@ public class WaveSurfingMovement {
         this.orbitalMovement = orbitalMovement;
     }
 
-    public MovementDecision getMovementDecision(BattleState2 bs) {
-        final TreeSet<LxxWave2> enemyBullets = new TreeSet<LxxWave2>(new FlightTimeComparator(bs.me));
-        enemyBullets.addAll(filter(bs.opponentBulletsInAir, new comingBullets(bs.me, bs.opponentBulletsInAir.size() > 1 ? 2 : 0)));
-        if (bs.opponent.alive && enemyBullets.size() < 2) {
-            enemyBullets.add(new LxxWave2(bs.opponent, bs.me, Rules.getBulletSpeed(3), bs.time + 1));
-        }
+    public MovementDecision getMovementDecision(BattleState bs, List<LxxWave> waves) {
+        final TreeSet<LxxWave> enemyBullets = new TreeSet<LxxWave>(new FlightTimeComparator(bs.me));
+        enemyBullets.addAll(waves);
         assert enemyBullets.size() > 0;
 
         pathColor = Violet.primaryColor155;
-        lastOrbitDirection = selectOrbitDirection(bs.me, bs.me, bs.opponent, new ArrayList<LxxWave2>(enemyBullets), lastOrbitDirection).orbitDirection;
+        lastOrbitDirection = selectOrbitDirection(bs.me, bs.me, bs.opponent, new ArrayList<LxxWave>(enemyBullets), lastOrbitDirection).orbitDirection;
         MonitoringService.setOrbitDirection(lastOrbitDirection);
 
         return orbitalMovement.getMovementDecision(bs.me, enemyBullets.iterator().next(), lastOrbitDirection, bs.opponent);
     }
 
-    private MovementOption selectOrbitDirection(LxxRobot2 myRealState, LxxRobot2 me, LxxRobot2 enemy, List<LxxWave2> waves,
+    private MovementOption selectOrbitDirection(LxxRobot myRealState, LxxRobot me, LxxRobot enemy, List<LxxWave> waves,
                                                 OrbitDirection lastOrbitDirection) {
         assert waves != null && waves.size() <= 2 && waves.size() > 0 : waves;
 
-        final LxxWave2 firstWave;
-        final LxxWave2 secondWave;
+        final LxxWave firstWave;
+        final LxxWave secondWave;
         final int firstWaveFlightTimeLimit;
         if (waves.size() == 1) {
             firstWave = waves.get(0);
@@ -96,7 +92,7 @@ public class WaveSurfingMovement {
         return selectBestOption(myRealState, enemy, secondWave, options);
     }
 
-    private MovementOption selectBestOption(LxxRobot2 myRealState, LxxRobot2 enemy, LxxWave2 secondWave, MovementOption[] options) {
+    private MovementOption selectBestOption(LxxRobot myRealState, LxxRobot enemy, LxxWave secondWave, MovementOption[] options) {
         Arrays.sort(options, optionsComparator);
 
         if (secondWave == null) {
@@ -121,7 +117,7 @@ public class WaveSurfingMovement {
         return options[bestOptIdx];
     }
 
-    private MovementOption predict(LxxWave2 wave, LxxRobot2 me, LxxRobot2 enemy, int flightLimit,
+    private MovementOption predict(LxxWave wave, LxxRobot me, LxxRobot enemy, int flightLimit,
                                    OrbitDirection orbitDirection, DangerFunction dangerFunction) {
         final MovementDecision enemyMd = new MovementDecision(
                 enemy != null ? Rules.MAX_VELOCITY * signum(enemy.velocity) : 0, 0);
@@ -130,9 +126,9 @@ public class WaveSurfingMovement {
 
         do {
             final MovementDecision md = orbitalMovement.getMovementDecision(me, wave, orbitDirection, enemy);
-            me = new LxxRobot2(me, md.turnRate, md.desiredVelocity);
+            me = new LxxRobot(me, md.turnRate, md.desiredVelocity);
             if (enemy != null && enemy.alive) {
-                enemy = new LxxRobot2(enemy, enemyMd.turnRate, enemyMd.desiredVelocity);
+                enemy = new LxxRobot(enemy, enemyMd.turnRate, enemyMd.desiredVelocity);
                 assert enemy.alive;
                 minDist = min(minDist, me.distance(enemy));
             }
@@ -163,23 +159,23 @@ public class WaveSurfingMovement {
 
         public final OrbitDirection orbitDirection;
         public final double danger;
-        public final LxxRobot2 me;
+        public final LxxRobot me;
 
-        private MovementOption(OrbitDirection orbitDirection, double danger, LxxRobot2 me) {
+        private MovementOption(OrbitDirection orbitDirection, double danger, LxxRobot me) {
             this.orbitDirection = orbitDirection;
             this.danger = danger;
             this.me = me;
         }
     }
 
-    private static class DangerFunction implements F3<LxxRobot2, LxxWave2, Double, Double> {
+    private static class DangerFunction implements F3<LxxRobot, LxxWave, Double, Double> {
 
         private final WaveDangerInfo waveDangerInfo;
-        private final LxxRobot2 myRealState;
+        private final LxxRobot myRealState;
         private final double mult;
         private final boolean drawDangers;
 
-        private DangerFunction(WaveDangerInfo waveDangerInfo, LxxRobot2 myRealState, double mult, boolean drawDangers) {
+        private DangerFunction(WaveDangerInfo waveDangerInfo, LxxRobot myRealState, double mult, boolean drawDangers) {
             this.waveDangerInfo = waveDangerInfo;
             this.myRealState = myRealState;
             this.mult = mult;
@@ -187,7 +183,7 @@ public class WaveSurfingMovement {
         }
 
         @Override
-        public Double f(LxxRobot2 me, LxxWave2 wave, Double minDist, OrbitDirection dir) {
+        public Double f(LxxRobot me, LxxWave wave, Double minDist, OrbitDirection dir) {
 
             final double distDng = getDistDanger(minDist);
             final double pointDanger = waveDangerInfo.getPointDanger(me);
@@ -209,32 +205,32 @@ public class WaveSurfingMovement {
         }
     }
 
-    private static final class comingBullets implements F1<LxxWave2, Boolean> {
+    private static final class comingBullets implements F1<LxxWave, Boolean> {
 
-        private final LxxRobot2 victim;
+        private final LxxRobot victim;
         private final int flightTimeThreshold;
 
-        private comingBullets(LxxRobot2 victim, int flightTimeThreshold) {
+        private comingBullets(LxxRobot victim, int flightTimeThreshold) {
             this.victim = victim;
             this.flightTimeThreshold = flightTimeThreshold;
         }
 
         @Override
-        public Boolean f(LxxWave2 bullet) {
+        public Boolean f(LxxWave bullet) {
             return (bullet.aDistance(victim) - (victim.time - bullet.time) * bullet.speed) / bullet.speed > flightTimeThreshold;
         }
     }
 
-    private static final class FlightTimeComparator implements Comparator<LxxWave2> {
+    private static final class FlightTimeComparator implements Comparator<LxxWave> {
 
-        private final LxxRobot2 victim;
+        private final LxxRobot victim;
 
-        private FlightTimeComparator(LxxRobot2 victim) {
+        private FlightTimeComparator(LxxRobot victim) {
             this.victim = victim;
         }
 
         @Override
-        public int compare(LxxWave2 o1, LxxWave2 o2) {
+        public int compare(LxxWave o1, LxxWave o2) {
             final double o1FlightTime = (o1.aDistance(victim) - (victim.time - o1.time) * o1.speed) / o1.speed;
             final double o2FlightTime = (o2.aDistance(victim) - (victim.time - o2.time) * o2.speed) / o2.speed;
             return (int) signum(o1FlightTime - o2FlightTime);

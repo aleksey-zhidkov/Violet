@@ -1,9 +1,9 @@
 package lxx.strategy;
 
-import lxx.model.BattleState2;
+import lxx.model.BattleState;
 
 public interface Strategy {
 
-    TurnDecision getTurnDecision(BattleState2 state);
+    TurnDecision getTurnDecision(BattleState state);
 
 }

@@ -1,7 +1,7 @@
 package lxx.logs;
 
 import ags.utils.KdTree;
-import lxx.model.LxxRobot2;
+import lxx.model.LxxRobot;
 
 import java.util.ArrayList;
 
@@ -16,12 +16,12 @@ public class KdTreeMovementLog<T> implements MovementLog<T> {
     }
 
     @Override
-    public void addEntry(LxxRobot2 observer, LxxRobot2 observable, T entry) {
+    public void addEntry(LxxRobot observer, LxxRobot observable, T entry) {
         tree.addPoint(locationFactory.getLocation(observer, observable), entry);
     }
 
     @Override
-    public ArrayList<KdTree.Entry<T>> getEntries(LxxRobot2 observer, LxxRobot2 observable, int count) {
+    public ArrayList<KdTree.Entry<T>> getEntries(LxxRobot observer, LxxRobot observable, int count) {
         return (ArrayList<KdTree.Entry<T>>) tree.nearestNeighbor(locationFactory.getLocation(observer, observable), count, true);
     }
 

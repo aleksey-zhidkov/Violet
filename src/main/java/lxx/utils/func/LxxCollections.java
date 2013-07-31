@@ -6,14 +6,14 @@ import java.util.List;
 
 public class LxxCollections {
 
-    public static<T> T find(Collection<T> coll, F1<T, Boolean> predicate) {
+    public static<T> Option<T> find(Collection<T> coll, F1<T, Boolean> predicate) {
         for (T e : coll) {
             if (predicate.f(e)) {
-                return e;
+                return Option.of(e);
             }
         }
 
-        return null;
+        return Option.NONE;
     }
 
     public static <T> List<T> filter(List<T> myBulletsInAir, F1<T, Boolean> predicate) {
