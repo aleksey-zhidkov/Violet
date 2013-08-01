@@ -71,7 +71,10 @@ public class LxxPoint extends Point2D.Double implements APoint, Serializable {
     }
 
     public double distanceToWall(BattleField battleField, double direction) {
-        return distanceToWall(this, battleField, direction);
+        assert direction >= 0 && direction <= Math.PI * 2;
+        final double distanceToWall = distanceToWall(this, battleField, direction);
+        assert distanceToWall >= 0 && distanceToWall <= battleField.fieldDiagonal;
+        return distanceToWall;
     }
 
     public static double distanceToWall(LxxPoint pnt, BattleField battleField, double direction) {

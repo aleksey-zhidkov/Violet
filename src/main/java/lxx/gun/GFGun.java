@@ -21,14 +21,14 @@ public class GFGun implements Gun {
     @Override
     public Double getGunTurnAngle(BattleState state, double bulletSpeed) {
         final double targetAngle;
-        if (state.me.getTurnsToGunCool() > 2 | state.enemy.energy == 0) {
+        if (state.me.getTurnsToGunCool() > 2 || state.opponent.energy == 0) {
             bearingOffset = null;
-            targetAngle = state.me.angleTo(state.enemy);
+            targetAngle = state.me.angleTo(state.opponent);
         } else {
             if (bearingOffset == null) {
                 bearingOffset = getBearingOffset(state, bulletSpeed);
             }
-            targetAngle = state.me.angleTo(state.enemy) + bearingOffset;
+            targetAngle = state.me.angleTo(state.opponent) + bearingOffset;
         }
 
         return Utils.normalRelativeAngle(targetAngle - state.me.gunHeading);

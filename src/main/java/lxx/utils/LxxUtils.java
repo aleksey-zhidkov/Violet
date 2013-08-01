@@ -5,7 +5,6 @@ import robocode.Rules;
 import robocode.util.Utils;
 
 import java.awt.*;
-import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
 import java.util.List;
@@ -117,7 +116,7 @@ public class LxxUtils {
     }
 
     public static double getMaxEscapeAngle(double bulletSpeed) {
-        return QuickMath.asin(Rules.MAX_VELOCITY / bulletSpeed) * 1.2;
+        return QuickMath.asin(Rules.MAX_VELOCITY / bulletSpeed) * 1.3;
     }
 
     public static double calculateAcceleration(LxxRobot prevState, LxxRobot curState) {
@@ -229,4 +228,42 @@ public class LxxUtils {
         return lst;
     }
 
+    public static LxxPoint[] toPoints(Rectangle2D rect) {
+        return new LxxPoint[]{
+                new LxxPoint(rect.getX(), rect.getY()),
+                new LxxPoint(rect.getX() + rect.getWidth(), rect.getY()),
+                new LxxPoint(rect.getX(), rect.getY() + rect.getHeight()),
+                new LxxPoint(rect.getX() + rect.getWidth(), rect.getY() + rect.getHeight())
+        };
+    }
+
+    public static boolean contains(LxxPoint center, double r, Rectangle2D rect) {
+        boolean res = true;
+
+        final double rSq = r * r;
+        for (LxxPoint pnt : toPoints(rect)) {
+            res &= center.distanceSq(pnt) < rSq;
+        }
+
+        return res;
+    }
+
+    public static double getNewVelocity(double currentVelocity, double desiredVelocity) {
+        if (currentVelocity == 0 || signum(currentVelocity) == signum(desiredVelocity)) {
+            final double desiredAcceleration = abs(desiredVelocity) - abs(currentVelocity);
+            return limit(-Rules.MAX_VELOCITY,
+                    currentVelocity + limit(-Rules.DECELERATION, desiredAcceleration, Rules.ACCELERATION) * signum(desiredVelocity),
+                    Rules.MAX_VELOCITY);
+        } else if (abs(currentVelocity) >= Rules.DECELERATION) {
+            return (currentVelocity - Rules.DECELERATION * (signum(currentVelocity)));
+        } else {
+            final double acceleration = 1 - abs(currentVelocity) / Rules.DECELERATION;
+            return acceleration * signum(desiredVelocity);
+        }
+    }
+
+    public static boolean isNear(double value1, double value2) {
+        assert !Double.isNaN(value1) && !Double.isNaN(value2);
+        return abs(value1 - value1) < 0.01;
+    }
 }

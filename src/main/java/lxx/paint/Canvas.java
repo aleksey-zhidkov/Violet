@@ -8,6 +8,8 @@ public enum Canvas {
     BATTLE_STATE(true),
     WS(true);
 
+    private static boolean paintEnabled = false;
+
     private LinkedList<DrawCommand> drawables = new LinkedList<DrawCommand>();
 
     private final boolean autoReset;
@@ -22,8 +24,12 @@ public enum Canvas {
         enabled = !enabled;
     }
 
+    public static void setPaintEnabled(boolean paintEnabled) {
+        Canvas.paintEnabled = paintEnabled;
+    }
+
     public boolean enabled() {
-        return enabled;
+        return enabled & paintEnabled;
     }
 
     public void reset() {

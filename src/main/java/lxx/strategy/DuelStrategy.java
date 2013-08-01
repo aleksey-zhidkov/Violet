@@ -3,11 +3,15 @@ package lxx.strategy;
 import lxx.gun.Gun;
 import lxx.model.BattleState;
 import lxx.model.LxxRobot;
+import lxx.model.LxxWave;
 import lxx.movement.MovementDecision;
 import lxx.movement.WaveSurfingMovement;
 import lxx.utils.LxxConstants;
 import robocode.Rules;
 import robocode.util.Utils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.Math.signum;
 
@@ -23,12 +27,16 @@ public class DuelStrategy implements Strategy {
 
     @Override
     public TurnDecision getTurnDecision(BattleState battleState) {
-        if (!battleState.enemy.alive && battleState.getEnemyBullets().size() == 0 ||
-                LxxRobot.UNKNOWN_ENEMY.equals(battleState.enemy.name)) {
+        List<LxxWave> bulletsInAir = new ArrayList<LxxWave>(battleState.opponent.bulletsInAir);
+        if (!battleState.opponent.alive && bulletsInAir.isEmpty() ||
+                LxxRobot.UNKNOWN.equals(battleState.opponent.name)) {
             return null;
         }
 
-        final MovementDecision md = waveSurfingMovement.getMovementDecision(battleState);
+        if (bulletsInAir.size() < 2) {
+            bulletsInAir.add(new LxxWave(battleState.opponent, battleState.me, Rules.getBulletSpeed(3), battleState.time));
+        }
+        final MovementDecision md = waveSurfingMovement.getMovementDecision(battleState, bulletsInAir);
 
         final double bulletPower = 1.95;
         return new TurnDecision(md.desiredVelocity, md.turnRate,
@@ -37,12 +45,12 @@ public class DuelStrategy implements Strategy {
     }
 
     public double getRadarTurnAngleRadians(BattleState battleState) {
-        final double angleToTarget = battleState.me.angleTo(battleState.enemy);
+        final double angleToTarget = battleState.me.angleTo(battleState.opponent);
         final double sign = (angleToTarget != battleState.me.radarHeading)
                 ? signum(Utils.normalRelativeAngle(angleToTarget - battleState.me.radarHeading))
                 : 1;
 
-        return Utils.normalRelativeAngle(angleToTarget - battleState.me.radarHeading + LxxConstants.RADIANS_5 * sign);
+        return Utils.normalRelativeAngle(angleToTarget - battleState.me.radarHeading + LxxConstants.RADIANS_10 * sign);
     }
 
 

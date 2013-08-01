@@ -9,17 +9,13 @@ import static robocode.util.Utils.normalRelativeAngle;
 
 public class FindEnemyStrategy implements Strategy {
 
-    private final int turnDirection;
-
-    public FindEnemyStrategy(BattleState bs) {
-        turnDirection = (int) signum(normalRelativeAngle(bs.me.angleTo(bs.rules.field.center) - bs.me.radarHeading));
-    }
-
     @Override
-    public TurnDecision getTurnDecision(BattleState state) {
-        if (!LxxRobot.UNKNOWN_ENEMY.equals(state.enemy.name)) {
+    public TurnDecision getTurnDecision(BattleState bs) {
+        if (!bs.opponent.alive || bs.time - bs.opponent.lastScanTime < 3) {
             return null;
         }
+
+        double turnDirection = (int) signum(normalRelativeAngle(bs.me.angleTo(bs.opponent.position) - bs.me.radarHeading));
 
         return new TurnDecision(
                 0, Rules.MAX_TURN_RATE_RADIANS * turnDirection,

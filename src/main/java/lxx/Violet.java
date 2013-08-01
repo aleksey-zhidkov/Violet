@@ -1,28 +1,30 @@
 package lxx;
 
+import ags.utils.KdTree;
 import lxx.gun.GFGun;
+import lxx.logs.KdTreeMovementLog;
+import lxx.logs.SimpleLocationFactory;
 import lxx.model.BattleState;
-import lxx.model.BattleStateFactory;
+import lxx.services.*;
+import lxx.services.BattleStateService;
 import lxx.movement.WaveSurfingMovement;
 import lxx.movement.orbital.AvoidEnemyOrbitalMovement;
 import lxx.movement.orbital.OrbitalMovement;
 import lxx.paint.Canvas;
 import lxx.paint.LxxGraphics;
-import lxx.services.DangerService;
-import lxx.services.DataService;
-import lxx.services.GFEnemyMovementLogService;
 import lxx.strategy.*;
 import lxx.utils.BattleRules;
-import lxx.utils.LxxUtils;
+import lxx.utils.GuessFactor;
+import lxx.utils.LxxConstants;
+import lxx.utils.func.F1;
+import lxx.utils.func.LxxCollections;
+import lxx.utils.func.Option;
 import robocode.*;
 import robocode.Event;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
@@ -33,23 +35,14 @@ public class Violet extends AdvancedRobot {
     public static final Color secondaryColor = new Color(218, 177, 40);
 
     public static final Color primaryColor155 = new Color(40, 6, 78, 155);
-    public static final Color secondaryColor155 = new Color(218, 177, 40, 155);
 
-    private static final Map<String, Object> staticData = new HashMap<String, Object>();
-    private final GFEnemyMovementLogService enemyLogService = new GFEnemyMovementLogService(staticData);
-
-    private final List<DataService> services;
+    private static final StaticData staticData = new StaticData();
 
     private BattleState battleState;
     private BattleRules rules;
     private Strategy[] strategies;
     private TurnDecision turnDecision;
-
-    public Violet() {
-        this.services = LxxUtils.<DataService>asModifiableList(
-                enemyLogService
-        );
-    }
+    private BattleStateService battleStateService;
 
     public void run() {
         if (getBattleFieldWidth() > 800 || getBattleFieldHeight() > 600) {
@@ -61,29 +54,49 @@ public class Violet extends AdvancedRobot {
             return;
         }
 
+        rules = new BattleRules(getBattleFieldWidth(), getBattleFieldHeight(), LxxConstants.ROBOT_SIDE_SIZE,
+                getGunHeat(), getGunCoolingRate(), getEnergy(), getName());
+
         setColors(primaryColor, new Color(28, 4, 52), secondaryColor,
                 new Color(141, 0, 207), new Color(141, 0, 207));
         setAdjustGunForRobotTurn(true);
         setAdjustRadarForGunTurn(true);
 
-        final WaveSurfingMovement waveSurfingMovement =
-                new WaveSurfingMovement(new DangerService(), new AvoidEnemyOrbitalMovement(new OrbitalMovement(battleState.rules.field, 800)));
-        strategies = new Strategy[]{
-                new FindEnemyStrategy(battleState),
-                new DuelStrategy(waveSurfingMovement, new GFGun(enemyLogService)),
-                new WinStrategy()
-        };
+        while (battleStateService == null) {
+            setTurnRightRadians(Double.POSITIVE_INFINITY);
+            setTurnGunRightRadians(Double.POSITIVE_INFINITY);
+            setTurnRadarRightRadians(Double.POSITIVE_INFINITY);
+            execute();
+        }
 
         while (battleState.me.alive) {
 
-            for (DataService service : services) {
-                service.updateData(battleState);
-            }
-
             doTurn();
 
+            setDebugProperty("", MonitoringService.formatData());
+
+            Canvas.setPaintEnabled(false);
             execute();
         }
+    }
+
+    private void initContext(String opponentName, BattleRules rules) {
+        final KdTreeMovementLog<GuessFactor> enemySimpleMovementLog =
+                new KdTreeMovementLog<GuessFactor>(staticData.enemyMovementKdTree, StaticData.simpleLocFactory);
+        final KdTreeMovementLog<GuessFactor> mySimpleMovementLog =
+                new KdTreeMovementLog<GuessFactor>(staticData.myMovementKdTree, StaticData.simpleLocFactory);
+
+        final Context ctx = new Context(mySimpleMovementLog, enemySimpleMovementLog, getName(), opponentName);
+        battleStateService = new BattleStateService(ctx);
+
+        final WaveSurfingMovement waveSurfingMovement =
+                new WaveSurfingMovement(ctx.dangerService, new AvoidEnemyOrbitalMovement(new OrbitalMovement(rules.field, 800)));
+
+        strategies = new Strategy[]{
+                new FindEnemyStrategy(),
+                new DuelStrategy(waveSurfingMovement, new GFGun(ctx.enemyLogService)),
+                new WinStrategy()
+        };
     }
 
     private void doTurn() {
@@ -110,17 +123,16 @@ public class Violet extends AdvancedRobot {
 
     private void handleGun(TurnDecision turnDecision) {
 
-        if (getGunHeat() == 0) {
-            if (abs(getGunTurnRemaining()) > 1) {
-                System.out.printf("[WARN] gun turn remaining is %3.2f when gun is cool\n", getGunTurnRemaining());
-            } else if (turnDecision.firePower != null) {
-                setFireBullet(turnDecision.firePower);
-            } else {
-                aimGun(turnDecision);
-            }
-        } else {
+        if (turnDecision.firePower == null || getGunHeat() > 0 || abs(getGunTurnRemaining()) > 1) {
             aimGun(turnDecision);
+            return;
         }
+
+        final Bullet firedBullet = setFireBullet(turnDecision.firePower);
+        if (firedBullet != null) {
+            addCustomEvent(new FireCondition(firedBullet));
+        }
+
     }
 
     private void aimGun(TurnDecision turnDecision) {
@@ -134,27 +146,79 @@ public class Violet extends AdvancedRobot {
 
     @Override
     public void onStatus(StatusEvent se) {
-        if (rules == null) {
-            rules = new BattleRules(getBattleFieldWidth(), getBattleFieldHeight(), getWidth(),
-                    getGunHeat(), getGunCoolingRate(), getEnergy(), getName());
-        }
         final Vector<Event> allEvents = getAllEvents();
-        battleState = BattleStateFactory.updateState(rules, battleState, se.getStatus(), allEvents, turnDecision);
+        if (battleStateService == null) {
+            Option<Event> eventOption = LxxCollections.find(allEvents, scannedRobotEvent);
+            if (eventOption.defined()) {
+                initContext(((ScannedRobotEvent) eventOption.get()).getName(), rules);
+                battleState = new BattleState(rules, se.getTime(), null, null, null);
+            } else {
+                return;
+            }
+        }
+        try {
+            battleState = battleStateService.updateState(rules, battleState, se.getStatus(), allEvents, turnDecision);
+        } catch (RuntimeException t) {
+            t.printStackTrace();
+            throw t;
+        }
     }
 
     @Override
     public void onKeyReleased(KeyEvent e) {
         if (e.getKeyChar() == 'w') {
             Canvas.WS.switchEnabled();
+        } else if (e.getKeyChar() == 'b') {
+            Canvas.BATTLE_STATE.switchEnabled();
         }
     }
 
     @Override
     public void onPaint(Graphics2D g) {
+        Canvas.setPaintEnabled(true);
         final LxxGraphics lg = new LxxGraphics(g);
 
         for (Canvas c : Canvas.values()) {
             c.exec(lg);
         }
     }
+
+    public class FireCondition extends Condition {
+
+        public final Bullet bullet;
+
+        public FireCondition(Bullet firedBullet) {
+            this.bullet = firedBullet;
+        }
+
+        @Override
+        public boolean test() {
+            removeCustomEvent(this);
+            return true;
+        }
+    }
+
+    private static final class StaticData {
+
+        private static final SimpleLocationFactory simpleLocFactory = new SimpleLocationFactory();
+
+        private final KdTree.SqrEuclid<GuessFactor> enemyMovementKdTree =
+                new KdTree.SqrEuclid<GuessFactor>(simpleLocFactory.getDimensionCount(), Integer.MAX_VALUE);
+
+        private final KdTree.SqrEuclid<GuessFactor> myMovementKdTree =
+                new KdTree.SqrEuclid<GuessFactor>(simpleLocFactory.getDimensionCount(), Integer.MAX_VALUE);
+
+
+    }
+
+    scannedRobotEvent scannedRobotEvent = new scannedRobotEvent();
+
+    private final class scannedRobotEvent implements F1<Event, Boolean> {
+
+        @Override
+        public Boolean f(Event event) {
+            return event instanceof ScannedRobotEvent;
+        }
+    }
+
 }

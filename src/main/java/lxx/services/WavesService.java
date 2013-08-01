@@ -34,9 +34,7 @@ public class WavesService {
                 waves.put(w, hitInterval.merge(bo - halfRobotWidthInRadians, bo + halfRobotWidthInRadians));
             } else if (w.isPassed(victimCurrentState)) {
                 final IntervalDouble hitInterval = waves.get(w);
-                if (hitInterval.b == Long.MAX_VALUE) {
-                    assert hitInterval.b != Long.MAX_VALUE;
-                }
+                assert hitInterval.a != Long.MAX_VALUE && hitInterval.b != Long.MIN_VALUE;
                 wavesIter.remove();
                 passedWaves.add(new WaveHitInterval(w, hitInterval));
             }

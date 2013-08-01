@@ -1,37 +1,45 @@
 package lxx.services;
 
-import lxx.model.BattleState;
-import lxx.utils.ScoredBearingOffset;
+import ags.utils.KdTree;
+import lxx.events.BulletDetectedEventListener;
+import lxx.events.BulletGoneEventListener;
+import lxx.logs.MovementLog;
+import lxx.model.LxxBullet;
 import lxx.model.LxxWave;
+import lxx.paint.Canvas;
+import lxx.paint.Circle;
 import lxx.utils.*;
 import lxx.utils.func.F1;
 import robocode.util.Utils;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.random;
 
-public class DangerService implements DataService {
+public class DangerService implements BulletDetectedEventListener, BulletGoneEventListener {
 
-    @Override
-    public void updateData(BattleState state) {
+    // todo: remove dangers, when wave gone
+    private final Map<LxxWave, WaveDangerInfoImpl> waveDangerInfos = new LxxHashMap<LxxWave, WaveDangerInfoImpl>(new createWaveDangerInfo());
+
+    private final MovementLog<GuessFactor> simpleHitsLog;
+
+    public DangerService(MovementLog<GuessFactor> simpleHitsLog) {
+        this.simpleHitsLog = simpleHitsLog;
     }
 
-    private final LxxHashMap<LxxWave, List<ScoredBearingOffset>> waveDangers = new LxxHashMap<LxxWave, List<ScoredBearingOffset>>(
-            new F1<LxxWave, List<ScoredBearingOffset>>() {
-                public List<ScoredBearingOffset> f(LxxWave lxxWave) {
-                    final List<ScoredBearingOffset> res = new ArrayList<ScoredBearingOffset>();
+    @Override
+    public void onBulletDetected(LxxBullet bullet) {
+        simpleHitsLog.addEntry(bullet.wave.launcher, bullet.wave.victim, new GuessFactor(Utils.normalRelativeAngle(bullet.heading - bullet.wave.noBearingOffset), LxxUtils.getMaxEscapeAngle(bullet.speed),
+                LxxUtils.lateralDirection(bullet.wave, bullet.wave.victim)));
+    }
 
-                    for (int i = 0; i < 100; i++) {
-                        res.add(new ScoredBearingOffset(random() * LxxConstants.RADIANS_90 - LxxConstants.RADIANS_45, random()));
-                    }
-
-                    return res;
-                }
-            }
-    );
+    @Override
+    public void onWaveGone(LxxWave wave) {
+        waveDangerInfos.remove(wave);
+    }
 
     public WaveDangerInfo getWaveDangerInfo(final LxxWave wave) {
 
@@ -41,14 +49,14 @@ public class DangerService implements DataService {
                 public double getPointDanger(APoint pnt) {
                     return LxxUtils.getRobotWidthInRadians(wave.launcher, pnt);
                 }
+
+                @Override
+                public void draw(Canvas c, long time) {
+                }
             };
         }
 
-        return new WaveDangerInfo() {
-            public double getPointDanger(final APoint pnt) {
-                return DangerService.this.getPointDanger(wave, pnt, waveDangers.get(wave));
-            }
-        };
+        return waveDangerInfos.get(wave);
     }
 
     private double getPointDanger(LxxWave wave, APoint pnt, List<ScoredBearingOffset> predictedBearingOffsets) {
@@ -77,7 +85,67 @@ public class DangerService implements DataService {
             }
         }
 
+        assert bulletsDanger >= 0;
         return bulletsDanger;
+    }
+
+    private class createWaveDangerInfo implements F1<LxxWave, WaveDangerInfoImpl> {
+        @Override
+        public WaveDangerInfoImpl f(LxxWave lxxWave) {
+            return new WaveDangerInfoImpl(lxxWave,
+                    visits(lxxWave, simpleHitsLog.getEntries(lxxWave.launcher, lxxWave.victim, simpleHitsLog.size())));
+        }
+
+        private List<ScoredBearingOffset> visits(LxxWave wave, List<KdTree.Entry<GuessFactor>> entries) {
+            final ArrayList<ScoredBearingOffset> visits = new ArrayList<ScoredBearingOffset>();
+
+            if (entries.size() == 0) {
+                return visits;
+            }
+
+            double maxDist = entries.get(0).distance + 0.00001;
+            for (KdTree.Entry<GuessFactor> entry : entries) {
+                final double score = 1 - entry.distance / maxDist;
+                assert score > 0 && score <= 1;
+                final double bearingOffset = entry.value.getBearingOffset(LxxUtils.getMaxEscapeAngle(wave.speed), LxxUtils.lateralDirection(wave, wave.victim));
+                assert bearingOffset >= -LxxConstants.RADIANS_60 &&
+                        bearingOffset <= LxxConstants.RADIANS_60;
+                visits.add(new ScoredBearingOffset(bearingOffset, score));
+            }
+
+            return visits;
+        }
+    }
+
+    private class WaveDangerInfoImpl implements WaveDangerInfo {
+
+        private final LxxWave wave;
+        private final List<ScoredBearingOffset> bos;
+
+        private WaveDangerInfoImpl(LxxWave wave, List<ScoredBearingOffset> bos) {
+            this.wave = wave;
+            this.bos = bos;
+        }
+
+        @Override
+        public double getPointDanger(APoint pnt) {
+            return DangerService.this.getPointDanger(wave, pnt, bos);
+        }
+
+        @Override
+        public void draw(Canvas c, long time) {
+            if (!c.enabled()) {
+                return;
+            }
+
+            final double travelledDist = wave.getTraveledDistance(time);
+
+            for (ScoredBearingOffset bo : bos) {
+                c.draw(new Circle(wave.launcher, travelledDist), new Color(255, 255, 255, 155));
+                c.draw(new Circle(wave.launcher.project(wave.noBearingOffset + bo.bearingOffset, travelledDist - wave.speed), 2, true),
+                        new Color(255, 255, 255, (int) (255 * bo.score)));
+            }
+        }
     }
 
 }

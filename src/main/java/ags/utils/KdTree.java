@@ -279,7 +279,7 @@ public abstract class KdTree<T> {
         public double distance;
         public final T value;
 
-        private Entry(double distance, T value) {
+        public Entry(double distance, T value) {
             this.distance = distance;
             this.value = value;
         }
