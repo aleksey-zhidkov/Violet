@@ -109,10 +109,7 @@ dependencies {
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
 
-task generateProperties {
-    inputs.file VERSION_PROPERTIES_FILE
-    outputs.file { "${sourceSets.main.resources.srcDirs.iterator().next()}/lxx/${project.name}.properties" }
-}
+task generateProperties
 
 generateProperties << {
 
@@ -250,7 +247,7 @@ def updateVersionProperties(def version) {
 def getBranchAcro() {
     def currentBranch = project.repository.branch
     def branchAcro = ''
-    currentBranch.split('-').each { branchAcro += it.charAt(0).toLowerCase() }
+    currentBranch.split('-').each { branchAcro += it.isInteger() ? it : it.charAt(0).toLowerCase() }
     branchAcro
 }
 
