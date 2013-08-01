@@ -11,11 +11,11 @@ public class FindEnemyStrategy implements Strategy {
 
     @Override
     public TurnDecision getTurnDecision(BattleState bs) {
-        if (!LxxRobot.UNKNOWN.equals(bs.opponent.name) && bs.time -bs.opponent.lastScanTime < 3) {
+        if (!bs.opponent.alive || bs.time - bs.opponent.lastScanTime < 3) {
             return null;
         }
 
-        double turnDirection = (int) signum(normalRelativeAngle(bs.me.angleTo(bs.rules.field.center) - bs.me.radarHeading));
+        double turnDirection = (int) signum(normalRelativeAngle(bs.me.angleTo(bs.opponent.position) - bs.me.radarHeading));
 
         return new TurnDecision(
                 0, Rules.MAX_TURN_RATE_RADIANS * turnDirection,

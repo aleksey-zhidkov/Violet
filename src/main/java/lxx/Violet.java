@@ -82,9 +82,9 @@ public class Violet extends AdvancedRobot {
 
     private void initContext(String opponentName, BattleRules rules) {
         final KdTreeMovementLog<GuessFactor> enemySimpleMovementLog =
-                new KdTreeMovementLog<GuessFactor>(staticData.enemyMovementKdTree, staticData.simpleLocFactory);
+                new KdTreeMovementLog<GuessFactor>(staticData.enemyMovementKdTree, StaticData.simpleLocFactory);
         final KdTreeMovementLog<GuessFactor> mySimpleMovementLog =
-                new KdTreeMovementLog<GuessFactor>(staticData.myMovementKdTree, staticData.simpleLocFactory);
+                new KdTreeMovementLog<GuessFactor>(staticData.myMovementKdTree, StaticData.simpleLocFactory);
 
         final Context ctx = new Context(mySimpleMovementLog, enemySimpleMovementLog, getName(), opponentName);
         battleStateService = new BattleStateService(ctx);
@@ -129,7 +129,9 @@ public class Violet extends AdvancedRobot {
         }
 
         final Bullet firedBullet = setFireBullet(turnDecision.firePower);
-        addCustomEvent(new FireCondition(firedBullet));
+        if (firedBullet != null) {
+            addCustomEvent(new FireCondition(firedBullet));
+        }
 
     }
 
@@ -154,8 +156,6 @@ public class Violet extends AdvancedRobot {
                 return;
             }
         }
-        final Vector<Event> allEventsCp = new Vector<Event>(allEvents);
-        allEventsCp.add(se);
         try {
             battleState = battleStateService.updateState(rules, battleState, se.getStatus(), allEvents, turnDecision);
         } catch (RuntimeException t) {
@@ -212,6 +212,7 @@ public class Violet extends AdvancedRobot {
     }
 
     scannedRobotEvent scannedRobotEvent = new scannedRobotEvent();
+
     private final class scannedRobotEvent implements F1<Event, Boolean> {
 
         @Override

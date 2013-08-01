@@ -8,15 +8,12 @@ import static java.lang.Math.abs;
 
 public class WinStrategy implements Strategy {
 
-    private Long winTime = -1L;
     private static final double PARADE_HEADING = LxxConstants.RADIANS_90;
 
     @Override
     public TurnDecision getTurnDecision(BattleState bs) {
-        boolean match = bs.opponent.bulletsInAir.size() == 0 && !bs.opponent.alive;
-
-        if (match && winTime == -1L) {
-            winTime = bs.time;
+        if (bs.opponent.bulletsInAir.size() > 0 || bs.opponent.alive) {
+            return null;
         }
 
         return new TurnDecision(0, getTurnRemaining(bs),

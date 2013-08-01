@@ -176,4 +176,6 @@ public class LxxRobot implements APoint {
 
     public static final F1<LxxRobot, LxxPoint> toPosition = new F1<LxxRobot, LxxPoint>() { @Override public LxxPoint f(LxxRobot lxxRobot) { return lxxRobot.position;     }};
 
+    public static final F1<LxxRobot, Boolean> toAlive = new F1<LxxRobot, Boolean>() { @Override public Boolean f(LxxRobot lxxRobot) { return lxxRobot.alive;     }};
+
 }

@@ -33,7 +33,7 @@ public class Context {
         this.bulletsEventsChannels.put(opponentName, opponentBulletsEventsChannel);
 
         final EventsChannel myBulletsEventsChannel = new EventsChannel();
-        this.bulletsEventsChannels.put(myName, opponentBulletsEventsChannel);
+        this.bulletsEventsChannels.put(myName, myBulletsEventsChannel);
 
         final EventsChannel opponentEventsChannel = new EventsChannel();
         this.robotssEventsChannels.put(opponentName, opponentEventsChannel);

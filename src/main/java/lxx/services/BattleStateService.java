@@ -62,7 +62,7 @@ public class BattleStateService {
 
                 bulletGone(meBuilder, battleState.me.bulletsInAir, bhe.getBullet(), e.getTime());
             } else if (e instanceof DeathEvent) {
-                meBuilder.dead();
+                meBuilder.died();
             } else if (e instanceof HitByBulletEvent) {
                 final HitByBulletEvent hbe = (HitByBulletEvent) e;
                 final double dmg = Rules.getBulletDamage(hbe.getPower());
@@ -81,7 +81,7 @@ public class BattleStateService {
                 final double expectedSpeed = getNewVelocity(battleState.me.velocity, lastTurnDecision.desiredVelocity);
                 meBuilder.hitWall(Rules.getWallHitDamage(expectedSpeed));
             } else if (e instanceof RobotDeathEvent) {
-                opponentBuilder.dead();
+                opponentBuilder.died();
             } else if (e instanceof ScannedRobotEvent) {
                 final ScannedRobotEvent sre = (ScannedRobotEvent) e;
                 opponentBuilder.position(myPos.project(myHeading + sre.getBearingRadians(), sre.getDistance()));
