@@ -52,7 +52,7 @@ public class WaveSurfingMovement {
 
     private MovementOption selectOrbitDirection(LxxRobot myRealState, LxxRobot me, LxxRobot enemy, List<LxxWave> waves,
                                                 OrbitDirection lastOrbitDirection) {
-        assert waves != null && waves.size() <= 2 && waves.size() > 0 : waves;
+        assert waves != null && waves.size() > 0 : waves;
 
         final LxxWave firstWave;
         final LxxWave secondWave;

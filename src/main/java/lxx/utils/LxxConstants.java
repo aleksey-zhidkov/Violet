@@ -64,4 +64,5 @@ public abstract class LxxConstants {
 
     public static final int INACTIVITY_TIMER = 450;
 
+    public static final double EPSILON = 0.0001;
 }

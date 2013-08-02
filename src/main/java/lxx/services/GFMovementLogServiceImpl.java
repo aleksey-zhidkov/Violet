@@ -45,7 +45,9 @@ public class GFMovementLogServiceImpl implements TickEventListener, GFMovementLo
 
     @Override
     public void onBulletFired(LxxBullet bullet) {
-        wavesService.registerWave(bullet.wave);
+        if (bullet.wave.victim.alive) {
+            wavesService.registerWave(bullet.wave);
+        }
     }
 
     public List<ScoredBearingOffset> getVisits(BattleState state, double bulletSpeed) {

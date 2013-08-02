@@ -6,6 +6,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.toDegrees;
 
 public class LxxPoint extends Point2D.Double implements APoint, Serializable {
 
@@ -58,10 +59,6 @@ public class LxxPoint extends Point2D.Double implements APoint, Serializable {
         return new LxxPoint(x + QuickMath.sin(alpha) * dist, y + QuickMath.cos(alpha) * dist);
     }
 
-    public LxxPoint projectAccurate(double alpha, double dist) {
-        return new LxxPoint(x + Math.sin(alpha) * dist, y + Math.cos(alpha) * dist);
-    }
-
     public double angleTo(APoint another) {
         return LxxUtils.angle(this, another);
     }
@@ -73,8 +70,9 @@ public class LxxPoint extends Point2D.Double implements APoint, Serializable {
     public double distanceToWall(BattleField battleField, double direction) {
         assert direction >= 0 && direction <= Math.PI * 2;
         final double distanceToWall = distanceToWall(this, battleField, direction);
-        assert distanceToWall >= 0 && distanceToWall <= battleField.fieldDiagonal;
-        return distanceToWall;
+        assert distanceToWall >= -1 && distanceToWall <= battleField.fieldDiagonal + LxxConstants.EPSILON
+                : String.format("Distance to wall: %f4.4; point: %s; direction: %f4.4",distanceToWall, this, toDegrees(direction));
+        return LxxUtils.limit(0, distanceToWall, battleField.fieldDiagonal);
     }
 
     public static double distanceToWall(LxxPoint pnt, BattleField battleField, double direction) {

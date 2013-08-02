@@ -21,6 +21,7 @@ import lxx.utils.func.LxxCollections;
 import lxx.utils.func.Option;
 import robocode.*;
 import robocode.Event;
+import robocode.util.Utils;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -53,9 +54,6 @@ public class Violet extends AdvancedRobot {
             System.out.println("Violet isn't support battles with more than 1 opponents");
             return;
         }
-
-        rules = new BattleRules(getBattleFieldWidth(), getBattleFieldHeight(), LxxConstants.ROBOT_SIDE_SIZE,
-                getGunHeat(), getGunCoolingRate(), getEnergy(), getName());
 
         setColors(primaryColor, new Color(28, 4, 52), secondaryColor,
                 new Color(141, 0, 207), new Color(141, 0, 207));
@@ -147,10 +145,15 @@ public class Violet extends AdvancedRobot {
     @Override
     public void onStatus(StatusEvent se) {
         final Vector<Event> allEvents = getAllEvents();
+        if (rules == null) {
+            rules = new BattleRules(getBattleFieldWidth(), getBattleFieldHeight(), LxxConstants.ROBOT_SIDE_SIZE,
+                    getGunCoolingRate(), getEnergy(), getName());
+        }
         if (battleStateService == null) {
             Option<Event> eventOption = LxxCollections.find(allEvents, scannedRobotEvent);
             if (eventOption.defined()) {
                 initContext(((ScannedRobotEvent) eventOption.get()).getName(), rules);
+				// todo: replace nulls with null objects
                 battleState = new BattleState(rules, se.getTime(), null, null, null);
             } else {
                 return;
@@ -158,6 +161,12 @@ public class Violet extends AdvancedRobot {
         }
         try {
             battleState = battleStateService.updateState(rules, battleState, se.getStatus(), allEvents, turnDecision);
+
+			assert se.getTime() >= rules.initialGunHeat / rules.gunCoolingRate || Utils.isNear(battleState.opponent.gunHeat, battleState.me.gunHeat)
+                    : se.getTime() + ": " + battleState.me.gunHeat + ", " + battleState.opponent.gunHeat;
+
+			MonitoringService.setRobot(battleState.me);
+			MonitoringService.setRobot(battleState.opponent);
         } catch (RuntimeException t) {
             t.printStackTrace();
             throw t;
