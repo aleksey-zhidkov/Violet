@@ -1,6 +1,7 @@
 package lxx.services;
 
 import lxx.model.LxxRobot;
+import lxx.model.LxxWave;
 import lxx.movement.orbital.OrbitDirection;
 
 import java.util.*;
@@ -40,7 +41,7 @@ public class MonitoringService {
 
 		builder.append('\n');
 		for (LxxRobot robot : robots.values()) {
-			builder.append(formatRobot(robot));
+			builder.append(formatRobot(robot)).append('\n');
 		}
 
         return builder.toString();
@@ -65,7 +66,20 @@ public class MonitoringService {
 		res.append("Energy: ").append(String.format(FOUR_DIGITS_DOUBLE_FORMAT, robot.energy)).append('\n');
 		res.append("Gun heat: ").append(String.format(FOUR_DIGITS_DOUBLE_FORMAT, robot.gunHeat)).append('\n');
 
+        for (LxxWave wave : robot.bulletsInAir) {
+            res.append(formatWave(wave)).append('\n');
+        }
+
 		return res.toString();
 	}
+
+    private static String formatWave(LxxWave wave) {
+        final StringBuilder res = new StringBuilder();
+
+        res.append("  Launch time: ").append(wave.time).append('\n');
+        res.append("  Fire pos: ").append(wave.launcher.position).append('\n');
+
+        return res.toString();
+    }
 
 }

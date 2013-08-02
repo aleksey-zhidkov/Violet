@@ -73,9 +73,16 @@ public class Violet extends AdvancedRobot {
 
             setDebugProperty("", MonitoringService.formatData());
 
-            Canvas.setPaintEnabled(false);
+            paint();
             execute();
         }
+    }
+
+    private void paint() {
+        for (Canvas c : Canvas.values()) {
+            c.exec(new LxxGraphics(getGraphics()));
+        }
+        Canvas.setPaintEnabled(false);
     }
 
     private void initContext(String opponentName, BattleRules rules) {
@@ -185,11 +192,6 @@ public class Violet extends AdvancedRobot {
     @Override
     public void onPaint(Graphics2D g) {
         Canvas.setPaintEnabled(true);
-        final LxxGraphics lg = new LxxGraphics(g);
-
-        for (Canvas c : Canvas.values()) {
-            c.exec(lg);
-        }
     }
 
     public class FireCondition extends Condition {

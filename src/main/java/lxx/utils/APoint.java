@@ -6,8 +6,6 @@ public interface APoint {
 
     double y();
 
-    double aDistance(APoint p);
-
     double angleTo(APoint pnt);
 
     APoint project(double alpha, double distance);

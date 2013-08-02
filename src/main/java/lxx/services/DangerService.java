@@ -6,6 +6,7 @@ import lxx.events.BulletGoneEventListener;
 import lxx.logs.MovementLog;
 import lxx.model.LxxBullet;
 import lxx.model.LxxWave;
+import lxx.paint.Arrow;
 import lxx.paint.Canvas;
 import lxx.paint.Circle;
 import lxx.utils.*;
@@ -21,7 +22,6 @@ import static java.lang.Math.abs;
 
 public class DangerService implements BulletDetectedEventListener, BulletGoneEventListener {
 
-    // todo: remove dangers, when wave gone
     private final Map<LxxWave, WaveDangerInfoImpl> waveDangerInfos = new LxxHashMap<LxxWave, WaveDangerInfoImpl>(new createWaveDangerInfo());
 
     private final MovementLog<GuessFactor> simpleHitsLog;
@@ -41,9 +41,9 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
         waveDangerInfos.remove(wave);
     }
 
-    public WaveDangerInfo getWaveDangerInfo(final LxxWave wave) {
+    public WaveDangerInfo getWaveDangerInfo(final LxxWave wave, boolean isImaginary) {
 
-        if (wave.time > wave.launcher.time) {
+        if (isImaginary) {
             return new WaveDangerInfo() {
                 @Override
                 public double getPointDanger(APoint pnt) {
@@ -66,7 +66,7 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
         final LxxPoint firePos = wave.launcher.position;
         final double alpha = LxxUtils.angle(firePos.x, firePos.y, pnt.x(), pnt.y());
         final double bearingOffset = Utils.normalRelativeAngle(alpha - wave.noBearingOffset);
-        final double robotWidthInRadians = LxxUtils.getRobotWidthInRadians(alpha, firePos.aDistance(pnt));
+        final double robotWidthInRadians = LxxUtils.getRobotWidthInRadians(alpha, firePos.distance(pnt));
 
         double bulletsDanger = 0;
         final double hiEffectDist = robotWidthInRadians * 0.75;
@@ -90,6 +90,7 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
     }
 
     private class createWaveDangerInfo implements F1<LxxWave, WaveDangerInfoImpl> {
+
         @Override
         public WaveDangerInfoImpl f(LxxWave lxxWave) {
             return new WaveDangerInfoImpl(lxxWave,
@@ -115,6 +116,7 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
 
             return visits;
         }
+
     }
 
     private class WaveDangerInfoImpl implements WaveDangerInfo {
@@ -140,12 +142,13 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
 
             final double travelledDist = wave.getTraveledDistance(time);
 
+            c.draw(new Circle(wave.launcher, travelledDist), new Color(255, 255, 255, 155));
             for (ScoredBearingOffset bo : bos) {
-                c.draw(new Circle(wave.launcher, travelledDist), new Color(255, 255, 255, 155));
                 c.draw(new Circle(wave.launcher.project(wave.noBearingOffset + bo.bearingOffset, travelledDist - wave.speed), 2, true),
                         new Color(255, 255, 255, (int) (255 * bo.score)));
             }
         }
+
     }
 
 }

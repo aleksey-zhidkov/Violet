@@ -95,11 +95,6 @@ public class LxxRobot implements APoint {
     }
 
     @Override
-    public double aDistance(APoint p) {
-        return position.aDistance(p);
-    }
-
-    @Override
     public double angleTo(APoint pnt) {
         return position.angleTo(pnt);
     }

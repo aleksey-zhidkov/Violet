@@ -72,7 +72,7 @@ public class WaveSurfingMovement {
             firstWaveFlightTimeLimit = 2;
         }
 
-        final WaveDangerInfo waveDangerInfo = dangerService.getWaveDangerInfo(firstWave);
+        final WaveDangerInfo waveDangerInfo = dangerService.getWaveDangerInfo(firstWave, firstWave.time == myRealState.time);
         waveDangerInfo.draw(Canvas.WS, myRealState.time);
         final DangerFunction firstWaveSameDirDF = new DangerFunction(waveDangerInfo, myRealState, 0.98, pathColor != null);
         final DangerFunction firstWaveAnotherDirDF = new DangerFunction(waveDangerInfo, myRealState, 1, pathColor != null);
@@ -217,7 +217,7 @@ public class WaveSurfingMovement {
 
         @Override
         public Boolean f(LxxWave bullet) {
-            return (bullet.aDistance(victim) - (victim.time - bullet.time) * bullet.speed) / bullet.speed > flightTimeThreshold;
+            return (bullet.distance(victim) - (victim.time - bullet.time) * bullet.speed) / bullet.speed > flightTimeThreshold;
         }
     }
 
@@ -231,8 +231,8 @@ public class WaveSurfingMovement {
 
         @Override
         public int compare(LxxWave o1, LxxWave o2) {
-            final double o1FlightTime = (o1.aDistance(victim) - (victim.time - o1.time) * o1.speed) / o1.speed;
-            final double o2FlightTime = (o2.aDistance(victim) - (victim.time - o2.time) * o2.speed) / o2.speed;
+            final double o1FlightTime = (o1.distance(victim) - (victim.time - o1.time) * o1.speed) / o1.speed;
+            final double o2FlightTime = (o2.distance(victim) - (victim.time - o2.time) * o2.speed) / o2.speed;
             return (int) signum(o1FlightTime - o2FlightTime);
         }
     }

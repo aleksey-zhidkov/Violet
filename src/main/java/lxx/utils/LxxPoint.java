@@ -34,21 +34,12 @@ public class LxxPoint extends Point2D.Double implements APoint, Serializable {
         this(original.x(), original.y());
     }
 
-    // TODO (azhidkov): fix me
-    public double aDistance(APoint p) {
-        return distance(p.x(), p.y());
-    }
-
     public double distance(APoint pnt) {
         return distance(pnt.x(), pnt.y());
     }
 
     public double aDistance(LxxPoint p) {
         return distance(p.x, p.y);
-    }
-
-    public double aDistanceSq(LxxPoint p) {
-        return distanceSq(p.x, p.y);
     }
 
     public String toString() {

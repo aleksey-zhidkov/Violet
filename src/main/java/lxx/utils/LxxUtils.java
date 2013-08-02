@@ -104,7 +104,7 @@ public class LxxUtils {
     }
 
     public static double getRobotWidthInRadians(APoint center, APoint robotPos) {
-        return getRobotWidthInRadians(angle(center, robotPos), center.aDistance(robotPos));
+        return getRobotWidthInRadians(angle(center, robotPos), center.distance(robotPos));
     }
 
     public static double getRobotWidthInRadians(double angle, double distance) {
@@ -176,7 +176,7 @@ public class LxxUtils {
     public static APoint[] intersection(APoint pnt1, APoint pnt2, final APoint center, double r) {
         final APoint farest;
         final APoint closest;
-        if (center.aDistance(pnt1) > center.aDistance(pnt2)) {
+        if (center.distance(pnt1) > center.distance(pnt2)) {
             farest = pnt1;
             closest = pnt2;
         } else {
@@ -184,9 +184,9 @@ public class LxxUtils {
             closest = pnt1;
         }
         final double segmentAlpha = farest.angleTo(closest);
-        final double segmentDist = farest.aDistance(closest);
+        final double segmentDist = farest.distance(closest);
         // calculate circle center in new cs
-        final APoint newCircleCenter = new LxxPoint().project(abs(Utils.normalRelativeAngle(farest.angleTo(center) - segmentAlpha)), farest.aDistance(center));
+        final APoint newCircleCenter = new LxxPoint().project(abs(Utils.normalRelativeAngle(farest.angleTo(center) - segmentAlpha)), farest.distance(center));
 
         if (r < newCircleCenter.x()) {
             // no intersection
