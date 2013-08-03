@@ -6,7 +6,7 @@ public abstract class Option<T> {
 
     public static <T> Option<T> of(T value) {
         if (value == null) {
-            return None.instance;
+            return NONE;
         } else {
             return new Some<T>(value);
         }
@@ -30,7 +30,7 @@ public abstract class Option<T> {
         return NONE;
     }
 
-    private static class Some<T> extends Option<T> {
+    private static final class Some<T> extends Option<T> {
 
         private final T value;
 
@@ -75,8 +75,6 @@ public abstract class Option<T> {
     }
 
     private static class None<T> extends Option<T> {
-
-        private static final None instance = new None();
 
         @Override
         public boolean defined() {

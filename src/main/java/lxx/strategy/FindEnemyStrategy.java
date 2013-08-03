@@ -1,7 +1,6 @@
 package lxx.strategy;
 
 import lxx.model.BattleState;
-import lxx.model.LxxRobot;
 import robocode.Rules;
 
 import static java.lang.Math.signum;
@@ -15,7 +14,7 @@ public class FindEnemyStrategy implements Strategy {
             return null;
         }
 
-        double turnDirection = (int) signum(normalRelativeAngle(bs.me.angleTo(bs.opponent.position) - bs.me.radarHeading));
+        final double turnDirection = (int) signum(normalRelativeAngle(bs.me.angleTo(bs.opponent.position) - bs.me.radarHeading));
 
         return new TurnDecision(
                 0, Rules.MAX_TURN_RATE_RADIANS * turnDirection,

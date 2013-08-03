@@ -7,6 +7,9 @@ import org.eclipse.jgit.awtui.AwtCredentialsProvider
 apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'idea'
+apply plugin: 'checkstyle'
+apply plugin: 'findbugs'
+apply plugin: 'pmd'
 
 task wrapper(type: Wrapper) { gradleVersion = '1.6' }
 
@@ -172,6 +175,31 @@ task quickFixRelease(dependsOn: ':build') << {
     tagBuild()
     pushMaster()
 
+}
+
+checkstyleMain{
+    source = sourceSets.main.allJava.matching{
+        exclude '**/ags/**/*'
+    }
+}
+
+findbugs {
+    def ft = findbugsMain.classes
+    ft.exclude '**/ags/*'
+    findbugsMain.classes = files(ft.files) // explicit list of files
+
+    excludeFilter = file("$rootProject.projectDir/config/findbugs/excludeFilter.xml")
+}
+
+pmd {
+    ruleSets = ["basic", "clone", "coupling", "finalizers", "imports", "sunsecure", "unusedcode"]
+}
+
+pmdMain {
+    excludes = ["**/ags/**/*.java"]
+    reports {
+        html.enabled true
+    }
 }
 
 def assertPreconditions(def commitMessage, def buildDst) {

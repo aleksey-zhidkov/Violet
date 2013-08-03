@@ -65,8 +65,37 @@ public class IntervalDouble implements Comparable<IntervalDouble> {
         return new IntervalDouble(min(a, this.a), max(b, this.b));
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final IntervalDouble that = (IntervalDouble) o;
+
+        if (Double.compare(that.a, a) != 0) return false;
+        if (Double.compare(that.b, b) != 0) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        temp = Double.doubleToLongBits(a);
+        result = (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(b);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+
+
+
     public int compareTo(IntervalDouble another) {
-        return a < another.a ? -1 : a == another.a ? 0 : 1;
+        if (equals(another)) {
+            return 0;
+        }
+        return a < another.a ? -1 :  1;
     }
 
 }

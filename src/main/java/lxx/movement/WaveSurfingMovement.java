@@ -11,11 +11,11 @@ import lxx.paint.Circle;
 import lxx.services.DangerService;
 import lxx.services.MonitoringService;
 import lxx.services.WaveDangerInfo;
-import lxx.utils.func.F1;
 import lxx.utils.func.F3;
 import robocode.Rules;
 
 import java.awt.*;
+import java.io.Serializable;
 import java.util.*;
 import java.util.List;
 
@@ -74,8 +74,8 @@ public class WaveSurfingMovement {
 
         final WaveDangerInfo waveDangerInfo = dangerService.getWaveDangerInfo(firstWave, firstWave.time == myRealState.time);
         waveDangerInfo.draw(Canvas.WS, myRealState.time);
-        final DangerFunction firstWaveSameDirDF = new DangerFunction(waveDangerInfo, myRealState, 0.98, pathColor != null);
-        final DangerFunction firstWaveAnotherDirDF = new DangerFunction(waveDangerInfo, myRealState, 1, pathColor != null);
+        final DangerFunction firstWaveSameDirDF = new DangerFunction(waveDangerInfo, myRealState, 0.98);
+        final DangerFunction firstWaveAnotherDirDF = new DangerFunction(waveDangerInfo, myRealState, 1);
         final MovementOption[] options = new MovementOption[]{
                 predict(firstWave, me, enemy, firstWaveFlightTimeLimit, OrbitDirection.CLOCKWISE,
                         lastOrbitDirection == OrbitDirection.CLOCKWISE ? firstWaveSameDirDF : firstWaveAnotherDirDF),
@@ -117,29 +117,31 @@ public class WaveSurfingMovement {
         return options[bestOptIdx];
     }
 
-    private MovementOption predict(LxxWave wave, LxxRobot me, LxxRobot enemy, int flightLimit,
+    private MovementOption predict(LxxWave wave, LxxRobot me, LxxRobot opponent, int flightLimit,
                                    OrbitDirection orbitDirection, DangerFunction dangerFunction) {
         final MovementDecision enemyMd = new MovementDecision(
-                enemy != null ? Rules.MAX_VELOCITY * signum(enemy.velocity) : 0, 0);
+                opponent != null ? Rules.MAX_VELOCITY * signum(opponent.velocity) : 0, 0);
 
-        double minDist = enemy != null ? me.distance(enemy) : Integer.MAX_VALUE;
+        double minDist = opponent != null ? me.distance(opponent) : Integer.MAX_VALUE;
 
+        LxxRobot meImage = me;
+        LxxRobot opponentImage = opponent;
         do {
-            final MovementDecision md = orbitalMovement.getMovementDecision(me, wave, orbitDirection, enemy);
-            me = new LxxRobot(me, md.turnRate, md.desiredVelocity);
-            if (enemy != null && enemy.alive) {
-                enemy = new LxxRobot(enemy, enemyMd.turnRate, enemyMd.desiredVelocity);
-                assert enemy.alive;
-                minDist = min(minDist, me.distance(enemy));
+            final MovementDecision md = orbitalMovement.getMovementDecision(meImage, wave, orbitDirection, opponentImage);
+            meImage = new LxxRobot(meImage, md.turnRate, md.desiredVelocity);
+            if (opponentImage != null && opponentImage.alive) {
+                opponentImage = new LxxRobot(opponentImage, enemyMd.turnRate, enemyMd.desiredVelocity);
+                assert opponentImage.alive;
+                minDist = min(minDist, meImage.distance(opponentImage));
             }
 
             if (Canvas.WS.enabled() && pathColor != null) {
-                Canvas.WS.draw(new Circle(me, 3, true), pathColor);
-                Canvas.WS.draw(new Circle(enemy, 3, true), pathColor);
+                Canvas.WS.draw(new Circle(meImage, 3, true), pathColor);
+                Canvas.WS.draw(new Circle(opponentImage, 3, true), pathColor);
             }
-        } while ((wave.distance(me) - (me.time - wave.time) * wave.speed) / wave.speed > flightLimit);
+        } while ((wave.distance(meImage) - (meImage.time - wave.time) * wave.speed) / wave.speed > flightLimit);
 
-        return new MovementOption(orbitDirection, dangerFunction.f(me, wave, minDist, orbitDirection), me);
+        return new MovementOption(orbitDirection, dangerFunction.f(meImage, wave, minDist, orbitDirection), meImage);
     }
 
     private static double getDistDanger(double distBetween) {
@@ -155,7 +157,7 @@ public class WaveSurfingMovement {
         }
     }
 
-    private static class MovementOption {
+    private static final class MovementOption {
 
         public final OrbitDirection orbitDirection;
         public final double danger;
@@ -168,18 +170,16 @@ public class WaveSurfingMovement {
         }
     }
 
-    private static class DangerFunction implements F3<LxxRobot, LxxWave, Double, Double> {
+    private static final class DangerFunction implements F3<LxxRobot, LxxWave, Double, Double> {
 
         private final WaveDangerInfo waveDangerInfo;
         private final LxxRobot myRealState;
         private final double mult;
-        private final boolean drawDangers;
 
-        private DangerFunction(WaveDangerInfo waveDangerInfo, LxxRobot myRealState, double mult, boolean drawDangers) {
+        private DangerFunction(WaveDangerInfo waveDangerInfo, LxxRobot myRealState, double mult) {
             this.waveDangerInfo = waveDangerInfo;
             this.myRealState = myRealState;
             this.mult = mult;
-            this.drawDangers = drawDangers;
         }
 
         @Override
@@ -197,27 +197,11 @@ public class WaveSurfingMovement {
         }
     }
 
-    private static class MovementOptionDangerComparator implements Comparator<MovementOption> {
+    private static class MovementOptionDangerComparator implements Comparator<MovementOption>, Serializable {
 
         @Override
         public int compare(MovementOption o1, MovementOption o2) {
             return (int) signum(o1.danger - o2.danger);
-        }
-    }
-
-    private static final class comingBullets implements F1<LxxWave, Boolean> {
-
-        private final LxxRobot victim;
-        private final int flightTimeThreshold;
-
-        private comingBullets(LxxRobot victim, int flightTimeThreshold) {
-            this.victim = victim;
-            this.flightTimeThreshold = flightTimeThreshold;
-        }
-
-        @Override
-        public Boolean f(LxxWave bullet) {
-            return (bullet.distance(victim) - (victim.time - bullet.time) * bullet.speed) / bullet.speed > flightTimeThreshold;
         }
     }
 

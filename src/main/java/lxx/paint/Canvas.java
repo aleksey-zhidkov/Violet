@@ -2,19 +2,20 @@ package lxx.paint;
 
 import java.awt.*;
 import java.util.LinkedList;
+import java.util.List;
 
 public enum Canvas {
 
     BATTLE_STATE(true),
     WS(true);
 
-    private static boolean paintEnabled = false;
+    private static boolean paintEnabled;
 
-    private LinkedList<DrawCommand> drawables = new LinkedList<DrawCommand>();
+    private final List<DrawCommand> drawables = new LinkedList<DrawCommand>();
 
     private final boolean autoReset;
 
-    private boolean enabled = false;
+    private boolean enabled;
 
     Canvas(boolean autoReset) {
         this.autoReset = autoReset;
@@ -57,10 +58,10 @@ public enum Canvas {
         }
     }
 
-    private class DrawCommand {
+    private static final class DrawCommand {
 
-        private final Drawable d;
-        private final Color c;
+        public final Drawable d;
+        public final Color c;
 
         private DrawCommand(Drawable d, Color c) {
             this.d = d;

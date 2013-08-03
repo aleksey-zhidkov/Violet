@@ -13,11 +13,51 @@ import static java.lang.Math.abs;
 public class LxxRobot implements APoint {
 
     public static final String UNKNOWN = "Unknown";
-
+    public static final F1<LxxRobot, String> toName = new F1<LxxRobot, String>() {
+        @Override
+        public String f(LxxRobot lxxRobot) {
+            return lxxRobot.name;
+        }
+    };
+    public static final F1<LxxRobot, Double> toHeading = new F1<LxxRobot, Double>() {
+        @Override
+        public Double f(LxxRobot lxxRobot) {
+            return lxxRobot.heading;
+        }
+    };
+    public static final F1<LxxRobot, Double> toVelocity = new F1<LxxRobot, Double>() {
+        @Override
+        public Double f(LxxRobot lxxRobot) {
+            return lxxRobot.velocity;
+        }
+    };
+    public static final F1<LxxRobot, Long> toTime = new F1<LxxRobot, Long>() {
+        @Override
+        public Long f(LxxRobot lxxRobot) {
+            return lxxRobot.time;
+        }
+    };
+    public static final F1<LxxRobot, Long> toLastScanTime = new F1<LxxRobot, Long>() {
+        @Override
+        public Long f(LxxRobot lxxRobot) {
+            return lxxRobot.lastScanTime;
+        }
+    };
+    public static final F1<LxxRobot, LxxPoint> toPosition = new F1<LxxRobot, LxxPoint>() {
+        @Override
+        public LxxPoint f(LxxRobot lxxRobot) {
+            return lxxRobot.position;
+        }
+    };
+    public static final F1<LxxRobot, Boolean> toAlive = new F1<LxxRobot, Boolean>() {
+        @Override
+        public Boolean f(LxxRobot lxxRobot) {
+            return lxxRobot.alive;
+        }
+    };
     public final Option<LxxRobot> prevState;
     public final BattleRules rules;
     public final String name;
-
     public final LxxPoint position;
     public final double velocity;
     public final double heading;
@@ -30,9 +70,7 @@ public class LxxRobot implements APoint {
     public final boolean alive;
     public final double firePower;
     public final double gunHeat;
-
     public final double speed;
-
     public final double acceleration;
     public final double movementDirection;
     public final List<LxxWave> bulletsInAir;
@@ -131,8 +169,8 @@ public class LxxRobot implements APoint {
         return !UNKNOWN.equals(name);
     }
 
-    public boolean scanned() {
-        return time == lastScanTime;
+    public boolean outDated() {
+        return time != lastScanTime;
     }
 
     @Override
@@ -140,7 +178,7 @@ public class LxxRobot implements APoint {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LxxRobot lxxRobot = (LxxRobot) o;
+        final LxxRobot lxxRobot = (LxxRobot) o;
 
         if (round != lxxRobot.round) return false;
         if (time != lxxRobot.time) return false;
@@ -156,25 +194,5 @@ public class LxxRobot implements APoint {
         result = 31 * result + round;
         return result;
     }
-
-    public static final F1<LxxRobot, String> toName = new F1<LxxRobot, String>() {
-        @Override
-        public String f(LxxRobot lxxRobot) {
-            return lxxRobot.name;
-        }
-    };
-
-    public static final F1<LxxRobot, Double> toHeading = new F1<LxxRobot, Double>() { @Override public Double f(LxxRobot lxxRobot) { return lxxRobot.heading;     }};
-
-    public static final F1<LxxRobot, Double> toVelocity = new F1<LxxRobot, Double>() { @Override public Double f(LxxRobot lxxRobot) { return lxxRobot.velocity;     }
-    };
-
-    public static final F1<LxxRobot, Long> toTime = new F1<LxxRobot, Long>() { @Override public Long f(LxxRobot lxxRobot) { return lxxRobot.time;     }};
-
-    public static final F1<LxxRobot, Long> toLastScanTime = new F1<LxxRobot, Long>() { @Override public Long f(LxxRobot lxxRobot) { return lxxRobot.lastScanTime;     }};
-
-    public static final F1<LxxRobot, LxxPoint> toPosition = new F1<LxxRobot, LxxPoint>() { @Override public LxxPoint f(LxxRobot lxxRobot) { return lxxRobot.position;     }};
-
-    public static final F1<LxxRobot, Boolean> toAlive = new F1<LxxRobot, Boolean>() { @Override public Boolean f(LxxRobot lxxRobot) { return lxxRobot.alive;     }};
 
 }

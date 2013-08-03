@@ -32,15 +32,15 @@ public class LxxGraphics {
     }
 
     public void drawCircle(APoint center, double radius) {
-        g.drawOval((int)round(center.x() - radius), (int)round(center.y() - radius), (int)round(radius * 2), (int)round(radius * 2));
+        g.drawOval((int) round(center.x() - radius), (int) round(center.y() - radius), (int) round(radius * 2), (int) round(radius * 2));
     }
 
     public void fillCircle(APoint center, double radius) {
-        g.fillOval((int)round(center.x() - radius), (int)round(center.y() - radius), (int)round(radius * 2), (int)round(radius * 2));
+        g.fillOval((int) round(center.x() - radius), (int) round(center.y() - radius), (int) round(radius * 2), (int) round(radius * 2));
     }
 
     public void drawSquare(APoint center, double width) {
-        g.drawRect((int)(center.x() - width / 2), (int)(center.y() - width / 2), (int)width, (int)width);
+        g.drawRect((int) (center.x() - width / 2), (int) (center.y() - width / 2), (int) width, (int) width);
     }
 
     public void drawText(String text, double x, double y) {

@@ -73,7 +73,7 @@ public abstract class KdTree<T> {
     /**
      * Constructor for child nodes. Internal use only.
      */
-    private KdTree(KdTree<T> parent, boolean right) {
+    private KdTree(KdTree<T> parent) {
         this.dimensions = parent.dimensions;
 
         // Init as leaf
@@ -134,8 +134,8 @@ public abstract class KdTree<T> {
                 }
 
                 // Create child leaves
-                KdTree<T> left = new ChildNode(cursor, false);
-                KdTree<T> right = new ChildNode(cursor, true);
+                KdTree<T> left = new ChildNode(cursor);
+                KdTree<T> right = new ChildNode(cursor);
 
                 // Move locations into children
                 for (int i = 0; i < cursor.locationCount; i++) {
@@ -189,7 +189,7 @@ public abstract class KdTree<T> {
     /**
      * Extends the bounds of this node do include a new location
      */
-    private final void extendBounds(double[] location) {
+    private void extendBounds(double[] location) {
         if (minLimit == null) {
             minLimit = new double[dimensions];
             System.arraycopy(location, 0, minLimit, 0, dimensions);
@@ -276,7 +276,7 @@ public abstract class KdTree<T> {
      * Stores a distance and value to output
      */
     public static class Entry<T> {
-        public double distance;
+        public final double distance;
         public final T value;
 
         public Entry(double distance, T value) {
@@ -499,8 +499,8 @@ public abstract class KdTree<T> {
      * Internal class for child nodes
      */
     private class ChildNode extends KdTree<T> {
-        private ChildNode(KdTree<T> parent, boolean right) {
-            super(parent, right);
+        private ChildNode(KdTree<T> parent) {
+            super(parent);
         }
 
         // Distance measurements are always called from the root node

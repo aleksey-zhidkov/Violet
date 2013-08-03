@@ -12,7 +12,7 @@ public class EventsChannel {
     private final List<BulletDetectedEventListener> bulletDetectedEventListeners = new ArrayList<BulletDetectedEventListener>();
     private final List<BulletFiredEventListener> bulletFiredEventListeners = new ArrayList<BulletFiredEventListener>();
     private final List<BulletGoneEventListener> bulletGoneEventListeners = new ArrayList<BulletGoneEventListener>();
-    private List<TickEventListener> tickEventListeners = new ArrayList<TickEventListener>();
+    private final List<TickEventListener> tickEventListeners = new ArrayList<TickEventListener>();
 
     public void fireEvent(LxxEvent event) {
         if (event instanceof BulletDetectedEvent) {

@@ -6,7 +6,6 @@ import lxx.events.BulletGoneEventListener;
 import lxx.logs.MovementLog;
 import lxx.model.LxxBullet;
 import lxx.model.LxxWave;
-import lxx.paint.Arrow;
 import lxx.paint.Canvas;
 import lxx.paint.Circle;
 import lxx.paint.Line;
@@ -109,7 +108,7 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
                 return visits;
             }
 
-            double maxDist = entries.get(0).distance + 0.00001;
+            final double maxDist = entries.get(0).distance + 0.00001;
             for (KdTree.Entry<GuessFactor> entry : entries) {
                 final double score = 1 - entry.distance / maxDist;
                 assert score > 0 && score <= 1;
@@ -124,7 +123,7 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
 
     }
 
-    private class WaveDangerInfoImpl implements WaveDangerInfo {
+    private final class WaveDangerInfoImpl implements WaveDangerInfo {
 
         private final LxxWave wave;
         private final List<ScoredBearingOffset> bos;
@@ -146,13 +145,12 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
             }
 
             final double traveledDistance = wave.getTraveledDistance(time);
-            final double travelledDist = traveledDistance;
 
             final Color color = new Color(255, 255, 255, 155);
-            c.draw(new Circle(wave.launcher, travelledDist), color);
+            c.draw(new Circle(wave.launcher, traveledDistance), color);
             c.draw(new Line(wave.launcher.project(wave.noBearingOffset, traveledDistance - 10), wave.noBearingOffset, 20), color);
             for (ScoredBearingOffset bo : bos) {
-                c.draw(new Circle(wave.launcher.project(wave.noBearingOffset + bo.bearingOffset, travelledDist - wave.speed), 2, true),
+                c.draw(new Circle(wave.launcher.project(wave.noBearingOffset + bo.bearingOffset, traveledDistance - wave.speed), 2, true),
                         new Color(255, 255, 255, (int) (255 * bo.score)));
             }
         }

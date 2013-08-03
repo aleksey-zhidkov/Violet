@@ -2,8 +2,6 @@ package lxx.utils;
 
 import robocode.util.Utils;
 
-import java.awt.geom.Rectangle2D;
-
 import static java.lang.Math.max;
 
 public class BattleField {
@@ -15,10 +13,6 @@ public class BattleField {
     public final APoint availableRightTop;
     public final APoint availableRightBottom;
 
-    private final LxxPoint leftTop;
-    private final LxxPoint rightTop;
-    private final LxxPoint rightBottom;
-
     public final Wall bottom;
     public final Wall left;
     public final Wall top;
@@ -29,16 +23,12 @@ public class BattleField {
     public final int availableLeftX;
     public final int availableRightX;
 
-    public final Rectangle2D.Double availableBattleFieldRectangle;
-
-    public final IntervalDouble noSmoothX;
-    public final IntervalDouble noSmoothY;
-
     public final LxxPoint center;
-
-    public final int width;
-    public final int height;
     public final int fieldDiagonal;
+
+    private final LxxPoint leftTop;
+    private final LxxPoint rightTop;
+    private final LxxPoint rightBottom;
 
     public BattleField(int x, int y, int width, int height) {
         availableBottomY = y;
@@ -73,16 +63,8 @@ public class BattleField {
         right.clockwiseWall = bottom;
         right.counterClockwiseWall = top;
 
-        availableBattleFieldRectangle = new Rectangle2D.Double(x, y, width, height);
-
-        center = new LxxPoint(rightX / 2, topY / 2);
-
-        this.width = width;
-        this.height = height;
+        center = new LxxPoint(rightX / 2D, topY / 2D);
         fieldDiagonal = (int) new LxxPoint(x, y).distance(width, height);
-
-        noSmoothX = new IntervalDouble(WALL_STICK, width - WALL_STICK);
-        noSmoothY = new IntervalDouble(WALL_STICK, height - WALL_STICK);
     }
 
     // this method is called very often, so keep it optimal
@@ -120,10 +102,6 @@ public class BattleField {
         throw new IllegalArgumentException("Invalid heading: " + heading);
     }
 
-    public double getBearingOffsetToWall(LxxPoint pnt, double heading) {
-        return Utils.normalRelativeAngle(getWall(pnt, heading).wallType.fromCenterAngle - heading);
-    }
-
     public double getDistanceToWall(Wall wall, LxxPoint pnt) {
         switch (wall.wallType) {
             case TOP:
@@ -151,29 +129,9 @@ public class BattleField {
         double smoothAngle;
         smoothAngle = (QuickMath.acos(adjacentLeg / WALL_STICK) + LxxConstants.RADIANS_4) * (isClockwise ? 1 : -1);
         final double baseAngle = wall.wallType.fromCenterAngle;
-        double smoothedAngle = Utils.normalAbsoluteAngle(baseAngle + smoothAngle);
+        final double smoothedAngle = Utils.normalAbsoluteAngle(baseAngle + smoothAngle);
         final Wall secondWall = isClockwise ? wall.clockwiseWall : wall.counterClockwiseWall;
         return smoothWall(secondWall, pnt, smoothedAngle, isClockwise);
-    }
-
-    public boolean contains(APoint point) {
-        return availableBattleFieldRectangle.contains(point.x(), point.y());
-    }
-
-    public class Wall {
-
-        public final WallType wallType;
-        public final APoint ccw;
-        public final APoint cw;
-
-        private Wall clockwiseWall;
-        private Wall counterClockwiseWall;
-
-        private Wall(WallType wallType, APoint ccw, APoint cw) {
-            this.wallType = wallType;
-            this.ccw = ccw;
-            this.cw = cw;
-        }
     }
 
     public static enum WallType {
@@ -182,9 +140,7 @@ public class BattleField {
         RIGHT(LxxConstants.RADIANS_90, LxxConstants.RADIANS_180, LxxConstants.RADIANS_0),
         BOTTOM(LxxConstants.RADIANS_180, LxxConstants.RADIANS_270, LxxConstants.RADIANS_90),
         LEFT(LxxConstants.RADIANS_270, LxxConstants.RADIANS_0, LxxConstants.RADIANS_180);
-
         public final double fromCenterAngle;
-
         public final double clockwiseAngle;
         public final double counterClockwiseAngle;
 
@@ -196,5 +152,20 @@ public class BattleField {
             this.counterClockwiseAngle = counterClockwiseAngle;
         }
 
+    }
+
+    public static final class Wall {
+
+        public final WallType wallType;
+        public final APoint ccw;
+        public final APoint cw;
+        private Wall clockwiseWall;
+        private Wall counterClockwiseWall;
+
+        private Wall(WallType wallType, APoint ccw, APoint cw) {
+            this.wallType = wallType;
+            this.ccw = ccw;
+            this.cw = cw;
+        }
     }
 }

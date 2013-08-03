@@ -85,7 +85,7 @@ public class LxxWave implements APoint {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LxxWave lxxWave = (LxxWave) o;
+        final LxxWave lxxWave = (LxxWave) o;
 
         if (time != lxxWave.time) return false;
         if (launcher != null ? !launcher.equals(lxxWave.launcher) : lxxWave.launcher != null) return false;
@@ -105,13 +105,13 @@ public class LxxWave implements APoint {
     public boolean isPassed(LxxRobot robot) {
         final double traveledDistance = getTraveledDistance(robot.time);
         return traveledDistance > launcher.distance(robot) &&
-                !LxxUtils.getBoundingRectangleAt(robot).contains((LxxPoint)launcher.project(launcher.angleTo(robot), traveledDistance));
+                !LxxUtils.getBoundingRectangleAt(robot).contains((LxxPoint) launcher.project(launcher.angleTo(robot), traveledDistance));
     }
 
     public boolean isPassed(LxxPoint pos, long time) {
         final double traveledDistance = getTraveledDistance(time);
         return traveledDistance > launcher.distance(pos) &&
-                !LxxUtils.getBoundingRectangleAt(pos).contains((LxxPoint)launcher.project(launcher.angleTo(pos), traveledDistance));
+                !LxxUtils.getBoundingRectangleAt(pos).contains((LxxPoint) launcher.project(launcher.angleTo(pos), traveledDistance));
     }
 
 }

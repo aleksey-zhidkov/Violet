@@ -7,10 +7,7 @@ import lxx.utils.APoint;
 import lxx.utils.IntervalDouble;
 import lxx.utils.LxxUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class WavesService {
 
@@ -21,9 +18,9 @@ public class WavesService {
         waves.put(wave, new IntervalDouble());
     }
 
-    public ArrayList<WaveHitInterval> updateData(BattleState state) {
+    public List<WaveHitInterval> updateData(BattleState state) {
         final ArrayList<WaveHitInterval> passedWaves = new ArrayList<WaveHitInterval>();
-        for (Iterator<LxxWave> wavesIter = waves.keySet().iterator(); wavesIter.hasNext();) {
+        for (final Iterator<LxxWave> wavesIter = waves.keySet().iterator(); wavesIter.hasNext();) {
             final LxxWave w = wavesIter.next();
             final LxxRobot victimCurrentState = state.getRobot(w.victim.name);
             final APoint bulletPos = w.launcher.project(w.launcher.angleTo(victimCurrentState), w.getTraveledDistance(state.time));
@@ -43,7 +40,7 @@ public class WavesService {
         return passedWaves;
     }
 
-    public class WaveHitInterval {
+    public static class WaveHitInterval {
 
         public final LxxWave wave;
         public final IntervalDouble hitInterval;

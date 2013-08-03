@@ -27,7 +27,7 @@ public class DuelStrategy implements Strategy {
 
     @Override
     public TurnDecision getTurnDecision(BattleState battleState) {
-        List<LxxWave> bulletsInAir = new ArrayList<LxxWave>(battleState.opponent.bulletsInAir);
+        final List<LxxWave> bulletsInAir = new ArrayList<LxxWave>(battleState.opponent.bulletsInAir);
         if (!battleState.opponent.alive && bulletsInAir.isEmpty() ||
                 LxxRobot.UNKNOWN.equals(battleState.opponent.name)) {
             return null;

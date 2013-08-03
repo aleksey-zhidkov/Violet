@@ -31,7 +31,7 @@ public class Vector2D implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Vector2D that = (Vector2D) o;
+        final Vector2D that = (Vector2D) o;
 
         return alphaRadians == that.alphaRadians && round(length) == round(that.length);
 

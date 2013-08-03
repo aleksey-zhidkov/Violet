@@ -54,15 +54,11 @@ public abstract class LxxConstants {
     public static final double RADIANS_349 = toRadians(349);
     public static final double RADIANS_350 = toRadians(350);
     public static final double RADIANS_360 = toRadians(360);
-
     public static final int ROBOT_SIDE_SIZE = 36;
     public static final int ROBOT_SIDE_HALF_SIZE = ROBOT_SIDE_SIZE / 2;
     public static final double MIN_BULLET_SPEED = Rules.getBulletSpeed(Rules.MAX_BULLET_POWER);
-
     public static final double INITIAL_GUN_HEAT = 3.0;
     public static final double ROBOT_HIT_DAMAGE = 0.6;
-
     public static final int INACTIVITY_TIMER = 450;
-
     public static final double EPSILON = 0.0001;
 }

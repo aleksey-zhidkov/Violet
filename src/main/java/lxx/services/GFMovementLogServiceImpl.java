@@ -2,7 +2,6 @@ package lxx.services;
 
 import ags.utils.KdTree;
 import lxx.events.BulletFiredEventListener;
-import lxx.events.TickEvent;
 import lxx.events.TickEventListener;
 import lxx.logs.MovementLog;
 import lxx.model.BattleState;
@@ -11,7 +10,6 @@ import lxx.model.LxxWave;
 import lxx.utils.GuessFactor;
 import lxx.utils.LxxUtils;
 import lxx.utils.ScoredBearingOffset;
-import lxx.utils.func.Option;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +33,7 @@ public class GFMovementLogServiceImpl implements TickEventListener, GFMovementLo
     @Override
     public void onTick(BattleState state) {
 
-        final ArrayList<WavesService.WaveHitInterval> waveHitIntervals = wavesService.updateData(state);
+        final List<WavesService.WaveHitInterval> waveHitIntervals = wavesService.updateData(state);
 
         for (WavesService.WaveHitInterval waveHitInterval : waveHitIntervals) {
             final LxxWave w = waveHitInterval.wave;

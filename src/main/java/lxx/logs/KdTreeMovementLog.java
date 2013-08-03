@@ -3,7 +3,7 @@ package lxx.logs;
 import ags.utils.KdTree;
 import lxx.model.LxxRobot;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class KdTreeMovementLog<T> implements MovementLog<T> {
 
@@ -21,8 +21,8 @@ public class KdTreeMovementLog<T> implements MovementLog<T> {
     }
 
     @Override
-    public ArrayList<KdTree.Entry<T>> getEntries(LxxRobot observer, LxxRobot observable, int count) {
-        return (ArrayList<KdTree.Entry<T>>) tree.nearestNeighbor(locationFactory.getLocation(observer, observable), count, true);
+    public List<KdTree.Entry<T>> getEntries(LxxRobot observer, LxxRobot observable, int count) {
+        return tree.nearestNeighbor(locationFactory.getLocation(observer, observable), count, true);
     }
 
     @Override

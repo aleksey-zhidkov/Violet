@@ -33,7 +33,7 @@ public class ColorFactory {
         final double b = minHsbVals[2] + (maxHsbVals[2] - minHsbVals[2]) * k;
         final int a = (int) round(minAlpha + (maxAlpha - minAlpha) * k);
 
-        return new Color(Color.HSBtoRGB((float)h, (float)s, (float)b) & 0xFFFFFF | (a << 24), true);
+        return new Color(Color.HSBtoRGB((float) h, (float) s, (float) b) & 0xFFFFFF | (a << 24), true);
     }
 
 }

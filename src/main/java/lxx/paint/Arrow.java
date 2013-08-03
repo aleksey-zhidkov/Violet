@@ -20,10 +20,10 @@ public class Arrow implements Drawable {
         final double arrowLength = from.distance(to);
         final APoint peakBase = from.project(angle, arrowLength - pikeWidth);
 
-        final APoint empennageBase = from.project(angle, (double) pikeWidth);
+        final APoint empennageBase = from.project(angle, pikeWidth);
 
         g.drawLine(from, peakBase);
-        g.drawLine(empennageBase, angle + Math.PI / 2, (double) pikeWidth);
+        g.drawLine(empennageBase, angle + Math.PI / 2, pikeWidth);
         g.drawLine(peakBase, angle + Math.PI / 2, pikeWidth);
 
         final APoint peakPnt1 = peakBase.project(robocode.util.Utils.normalAbsoluteAngle(angle + Math.PI / 2), pikeWidth / 2);

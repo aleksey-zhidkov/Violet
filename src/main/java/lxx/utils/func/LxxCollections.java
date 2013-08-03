@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class LxxCollections {
+public final class LxxCollections {
 
-    public static<T> Option<T> find(Collection<T> coll, F1<T, Boolean> predicate) {
+    private LxxCollections() {
+    }
+
+    public static <T> Option<T> find(Collection<T> coll, F1<T, Boolean> predicate) {
         for (T e : coll) {
             if (predicate.f(e)) {
                 return Option.of(e);

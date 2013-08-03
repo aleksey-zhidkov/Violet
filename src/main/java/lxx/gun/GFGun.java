@@ -12,7 +12,7 @@ import static java.lang.Math.*;
 public class GFGun implements Gun {
 
     private final GFMovementLogService logService;
-    private Double bearingOffset = null;
+    private Double bearingOffset;
 
     public GFGun(GFMovementLogService logService) {
         this.logService = logService;
@@ -36,7 +36,7 @@ public class GFGun implements Gun {
 
     private Double getBearingOffset(BattleState state, double bulletSpeed) {
         final List<ScoredBearingOffset> visits = logService.getVisits(state, bulletSpeed);
-        if (visits.size() == 0) {
+        if (visits.isEmpty()) {
             return 0d;
         }
 

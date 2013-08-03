@@ -2,17 +2,17 @@ package lxx.utils;
 
 public final class QuickMath {
 
-    /* Setting for trig */
-    private static final int TRIG_HIGH_DIVISIONS = 131072; /* Must be power of 2 */
-    private static final int SINE_TABLE_DELTA1 = (TRIG_HIGH_DIVISIONS - 1);
-    private static final double SIN_TABLE_DELTA2 = 1.25 * TRIG_HIGH_DIVISIONS;
-    private static final double ACOS_K = SINE_TABLE_DELTA1 / 2;
-    private static final double ACOS_TABLE_DELTA = (ACOS_K + 0.5);
-
     public static final double PI = 3.1415926535897932384626433832795D;
     public static final double TWO_PI = 6.2831853071795864769252867665590D;
     public static final double HALF_PI = 1.5707963267948966192313216916398D;
 
+    /* Setting for trig */
+    /* Must be power of 2 */
+    private static final int TRIG_HIGH_DIVISIONS = 131072;
+    private static final int SINE_TABLE_DELTA1 = (TRIG_HIGH_DIVISIONS - 1);
+    private static final double SIN_TABLE_DELTA2 = 1.25 * TRIG_HIGH_DIVISIONS;
+    private static final double ACOS_K = SINE_TABLE_DELTA1 / 2;
+    private static final double ACOS_TABLE_DELTA = (ACOS_K + 0.5);
     private static final double K = TRIG_HIGH_DIVISIONS / TWO_PI;
     private static final double TAN_K = TRIG_HIGH_DIVISIONS / PI;
 

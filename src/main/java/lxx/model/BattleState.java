@@ -7,6 +7,7 @@ public class BattleState {
     public final long time;
 
     public final BattleRules rules;
+
     public final BattleState prevState;
 
     public final LxxRobot me;
@@ -16,7 +17,7 @@ public class BattleState {
         this.rules = rules;
         this.time = time;
         this.prevState = prevState;
-        
+
         this.me = me;
         this.opponent = opponent;
     }
