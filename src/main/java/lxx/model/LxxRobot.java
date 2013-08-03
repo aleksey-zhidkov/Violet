@@ -2,6 +2,7 @@ package lxx.model;
 
 import lxx.utils.*;
 import lxx.utils.func.F1;
+import lxx.utils.func.Option;
 import robocode.Rules;
 
 import java.util.List;
@@ -12,6 +13,8 @@ import static java.lang.Math.abs;
 public class LxxRobot implements APoint {
 
     public static final String UNKNOWN = "Unknown";
+
+    public final Option<LxxRobot> prevState;
     public final BattleRules rules;
     public final String name;
 
@@ -34,10 +37,10 @@ public class LxxRobot implements APoint {
     public final double movementDirection;
     public final List<LxxWave> bulletsInAir;
 
-    public LxxRobot(BattleRules rules, String name, LxxPoint position, double velocity, double heading, double energy,
-                    long lastScanTime, long time, int round, Double radarHeading, Double gunHeading, boolean alive,
-                    double firePower, double gunHeat, double speed, double acceleration, double movementDirection,
-                    List<LxxWave> bulletsInAir) {
+    public LxxRobot(Option<LxxRobot> prevState, BattleRules rules, String name, LxxPoint position, double velocity, double heading,
+                    double energy, long lastScanTime, long time, int round, Double radarHeading, Double gunHeading, boolean alive,
+                    double firePower, double gunHeat, double speed, double acceleration, double movementDirection, List<LxxWave> bulletsInAir) {
+        this.prevState = prevState;
         this.rules = rules;
         this.name = name;
         this.position = position;
@@ -63,6 +66,7 @@ public class LxxRobot implements APoint {
                 turnRate <= Rules.getTurnRateRadians(original.speed)
                 : turnRate + ":" + original.speed;
 
+        prevState = Option.of(original);
         velocity = LxxUtils.getNewVelocity(original.velocity, desiredVelocity);
         speed = abs(velocity);
         heading = original.heading + turnRate;

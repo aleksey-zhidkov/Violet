@@ -3,6 +3,7 @@ package lxx
 import lxx.model.LxxRobot
 import lxx.utils.BattleRules
 import lxx.utils.LxxPoint
+import lxx.utils.func.Option
 
 final class TestUtils {
 
@@ -11,6 +12,7 @@ final class TestUtils {
 
     static LxxRobot createRobot(Map params) {
         return new LxxRobot(
+                Option.of(params.get('prevState')) as Option<LxxRobot>,
                 params.get('rules', null) as BattleRules,
                 params.get('name', null) as String,
                 params.get('position', null) as LxxPoint,

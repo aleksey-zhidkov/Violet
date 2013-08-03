@@ -9,6 +9,7 @@ import lxx.model.LxxWave;
 import lxx.paint.Arrow;
 import lxx.paint.Canvas;
 import lxx.paint.Circle;
+import lxx.paint.Line;
 import lxx.utils.*;
 import lxx.utils.func.F1;
 import robocode.util.Utils;
@@ -32,8 +33,12 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
 
     @Override
     public void onBulletDetected(LxxBullet bullet) {
-        simpleHitsLog.addEntry(bullet.wave.launcher, bullet.wave.victim, new GuessFactor(Utils.normalRelativeAngle(bullet.heading - bullet.wave.noBearingOffset), LxxUtils.getMaxEscapeAngle(bullet.speed),
-                LxxUtils.lateralDirection(bullet.wave, bullet.wave.victim)));
+        assert bullet.wave.launcher.prevState.defined() && bullet.wave.victim.prevState.defined();
+
+        simpleHitsLog.addEntry(bullet.wave.launcher.prevState.get(), bullet.wave.victim.prevState.get(),
+                new GuessFactor(Utils.normalRelativeAngle(bullet.heading - bullet.wave.noBearingOffset),
+                        LxxUtils.getMaxEscapeAngle(bullet.speed),
+                        LxxUtils.lateralDirection(bullet.wave, bullet.wave.victim.prevState.get())));
     }
 
     @Override
@@ -140,9 +145,12 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
                 return;
             }
 
-            final double travelledDist = wave.getTraveledDistance(time);
+            final double traveledDistance = wave.getTraveledDistance(time);
+            final double travelledDist = traveledDistance;
 
-            c.draw(new Circle(wave.launcher, travelledDist), new Color(255, 255, 255, 155));
+            final Color color = new Color(255, 255, 255, 155);
+            c.draw(new Circle(wave.launcher, travelledDist), color);
+            c.draw(new Line(wave.launcher.project(wave.noBearingOffset, traveledDistance - 10), wave.noBearingOffset, 20), color);
             for (ScoredBearingOffset bo : bos) {
                 c.draw(new Circle(wave.launcher.project(wave.noBearingOffset + bo.bearingOffset, travelledDist - wave.speed), 2, true),
                         new Color(255, 255, 255, (int) (255 * bo.score)));
