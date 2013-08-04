@@ -25,7 +25,6 @@ public class LxxWave implements APoint {
     }
 
     public double getTraveledDistance(long time) {
-        assert time >= this.time;
         return speed * (time - this.time);
     }
 

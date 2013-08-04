@@ -26,11 +26,16 @@ public class BattleField {
     public final LxxPoint center;
     public final int fieldDiagonal;
 
+    public final int width;
+    public final int height;
+
     private final LxxPoint leftTop;
     private final LxxPoint rightTop;
     private final LxxPoint rightBottom;
 
     public BattleField(int x, int y, int width, int height) {
+        this.width = width;
+        this.height = height;
         availableBottomY = y;
         availableTopY = y + height;
         availableLeftX = x;

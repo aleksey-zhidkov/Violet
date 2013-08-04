@@ -34,7 +34,8 @@ public class DuelStrategy implements Strategy {
         }
 
         if (bulletsInAir.size() < 2) {
-            bulletsInAir.add(new LxxWave(battleState.opponent, battleState.me, Rules.getBulletSpeed(3), battleState.time));
+            bulletsInAir.add(new LxxWave(battleState.opponent, battleState.me, Rules.getBulletSpeed(3),
+                    (long) Math.ceil(battleState.time + battleState.opponent.gunHeat / battleState.rules.gunCoolingRate)));
         }
         final MovementDecision md = waveSurfingMovement.getMovementDecision(battleState, bulletsInAir);
 

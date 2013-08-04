@@ -184,6 +184,7 @@ public class BattleStateService {
         public void process(HitRobotEvent event, BattleState battleState, LxxRobotBuilder myBuilder, LxxRobotBuilder opponentBuilder, TurnDecision lastTurnDecision) {
             myBuilder.hitRobot();
             opponentBuilder.hitRobot();
+            MonitoringService.robotHitted();
         }
     }
 
@@ -192,6 +193,7 @@ public class BattleStateService {
         public void process(HitWallEvent event, BattleState battleState, LxxRobotBuilder myBuilder, LxxRobotBuilder opponentBuilder, TurnDecision lastTurnDecision) {
             final double expectedSpeed = getNewVelocity(battleState.me.velocity, lastTurnDecision.desiredVelocity);
             myBuilder.hitWall(Rules.getWallHitDamage(expectedSpeed));
+            MonitoringService.wallHitted();
         }
     }
 

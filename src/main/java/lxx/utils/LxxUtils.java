@@ -140,4 +140,11 @@ public final class LxxUtils {
         return acceleration >= -Rules.MAX_VELOCITY - LxxConstants.EPSILON &&
                 acceleration <= Rules.ACCELERATION + LxxConstants.EPSILON;
     }
+
+    // turnRate = 10 - 0.75 * speed
+    // turnRate - 10 = - 0.75 * speed
+    // speed = (10 - turnRate) / 0.75
+    public static double getRequiredSpeed(double turnRate) {
+        return max(0, (10 - toDegrees(turnRate) / 0.75));
+    }
 }

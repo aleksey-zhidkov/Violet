@@ -19,6 +19,8 @@ public final class MonitoringService {
 
     private static final Properties props = new Properties();
     private static final Map<String, LxxRobot> robots = new TreeMap<String, LxxRobot>();
+    private static int robotHits;
+    private static int wallHits;
 
     private MonitoringService() {
     }
@@ -38,8 +40,20 @@ public final class MonitoringService {
         robots.put(robot.name, robot);
     }
 
+    public static void robotHitted() {
+        robotHits++;
+    }
+
+    public static void wallHitted() {
+        wallHits++;
+    }
+
     public static String formatData() {
         final StringBuilder builder = new StringBuilder();
+
+        builder.append("Wall hits: ").append(wallHits).append('\n');
+        builder.append("Robot hits: ").append(robotHits).append('\n');
+
 
         builder.append("\n\nOrbit direction: ").append(props.get(ORBIT_DIR_KEY)).append('\n');
         builder.append(formatOdDanger(OrbitDirection.CLOCKWISE));

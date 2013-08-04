@@ -27,6 +27,7 @@ import java.awt.event.KeyEvent;
 import java.util.*;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.signum;
 
 public class Violet extends AdvancedRobot {
@@ -43,10 +44,6 @@ public class Violet extends AdvancedRobot {
     private BattleStateService battleStateService;
 
     public void run() {
-        if (getBattleFieldWidth() > 800 || getBattleFieldHeight() > 600) {
-            System.out.println("Violet isn't support battle fields greater than 800x600");
-            return;
-        }
         if (getOthers() > 1) {
             System.out.println("Violet isn't support battles with more than 1 opponents");
             return;
@@ -92,7 +89,7 @@ public class Violet extends AdvancedRobot {
         battleStateService = new BattleStateService(ctx);
 
         final WaveSurfingMovement waveSurfingMovement =
-                new WaveSurfingMovement(ctx.dangerService, new AvoidEnemyOrbitalMovement(new OrbitalMovement(rules.field, 800)));
+                new WaveSurfingMovement(ctx.dangerService, new AvoidEnemyOrbitalMovement(new OrbitalMovement(rules.field, max(rules.field.width, rules.field.height))));
 
         strategies = new Strategy[]{
                 new FindEnemyStrategy(),
