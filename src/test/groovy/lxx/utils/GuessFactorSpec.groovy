@@ -11,7 +11,7 @@ class GuessFactorSpec extends Specification {
 
         final double mae = LxxUtils.getMaxEscapeAngle(Rules.getBulletSpeed(3))
         when:
-        final GuessFactor gf = new GuessFactor(loggedBearingOffset, mae, loggedLateralDirection)
+        final GuessFactor gf = new GuessFactor(loggedBearingOffset, mae, loggedLateralDirection, null, null)
 
         then:
         Utils.isNear(gf.getBearingOffset(mae, currentLateralDirection), expectedBearingOffset)

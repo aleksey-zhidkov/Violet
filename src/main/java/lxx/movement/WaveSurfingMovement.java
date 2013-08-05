@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.List;
 
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 import static java.lang.Math.signum;
 import static lxx.utils.LxxUtils.List;
 
@@ -72,7 +73,7 @@ public class WaveSurfingMovement {
             firstWaveFlightTimeLimit = 2;
         }
 
-        final WaveDangerInfo waveDangerInfo = dangerService.getWaveDangerInfo(firstWave, firstWave.time == myRealState.time);
+        final WaveDangerInfo waveDangerInfo = dangerService.getWaveDangerInfo(firstWave, firstWave.time >= myRealState.time);
         waveDangerInfo.draw(Canvas.WS, myRealState.time);
         final DangerFunction firstWaveSameDirDF = new DangerFunction(waveDangerInfo, myRealState, 0.98);
         final DangerFunction firstWaveAnotherDirDF = new DangerFunction(waveDangerInfo, myRealState, 1);
@@ -145,13 +146,10 @@ public class WaveSurfingMovement {
     }
 
     private static double getDistDanger(double distBetween) {
-        if (distBetween < 50) {
-            return 500 / distBetween;
-        }
-        if (distBetween < 400) {
-            return 400 / (400 + Math.pow(Math.E, distBetween / 40)) + 0.01;
+        if (distBetween <= 50) {
+            return 1;
         } else if (distBetween < 1000) {
-            return (1000 - distBetween) / 600 * 0.01;
+            return 1 - (pow(distBetween / 1000, 2));
         } else {
             return 0;
         }
@@ -189,9 +187,10 @@ public class WaveSurfingMovement {
             final double pointDanger = waveDangerInfo.getPointDanger(me);
             final double flightTime = wave.getFlightTime(myRealState.position, myRealState.time);
 
-            final double danger = (pointDanger / flightTime + 4 * distDng) * mult;
+            // todo: use avg/max flight time instead of 30
+            final double danger = (pointDanger + distDng) * mult * (30 / flightTime);
 
-            MonitoringService.setDangerComponents(dir, 4 * distDng, pointDanger, flightTime, danger);
+            MonitoringService.setDangerComponents(dir, distDng, pointDanger, flightTime, danger);
 
             return danger;
         }

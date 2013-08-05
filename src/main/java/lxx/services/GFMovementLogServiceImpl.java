@@ -6,6 +6,7 @@ import lxx.events.TickEventListener;
 import lxx.logs.MovementLog;
 import lxx.model.BattleState;
 import lxx.model.LxxBullet;
+import lxx.model.LxxRobot;
 import lxx.model.LxxWave;
 import lxx.utils.GuessFactor;
 import lxx.utils.LxxUtils;
@@ -35,9 +36,11 @@ public class GFMovementLogServiceImpl implements TickEventListener, GFMovementLo
 
         final List<WavesService.WaveHitInterval> waveHitIntervals = wavesService.updateData(state);
 
+        final LxxRobot launcher = state.getRobot(observer);
+        final LxxRobot victim = state.getRobot(observable);
         for (WavesService.WaveHitInterval waveHitInterval : waveHitIntervals) {
             final LxxWave w = waveHitInterval.wave;
-            log.addEntry(state.getRobot(observer), state.getRobot(observable), new GuessFactor(waveHitInterval.hitInterval.center(), LxxUtils.getMaxEscapeAngle(w.speed), LxxUtils.lateralDirection(w, w.victim)));
+            log.addEntry(launcher, victim, new GuessFactor(waveHitInterval.hitInterval.center(), LxxUtils.getMaxEscapeAngle(w.speed), LxxUtils.lateralDirection(w, w.victim), launcher, victim));
         }
     }
 

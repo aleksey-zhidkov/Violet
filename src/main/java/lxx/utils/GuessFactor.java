@@ -1,12 +1,18 @@
 package lxx.utils;
 
+import lxx.model.LxxRobot;
+
 import static java.lang.StrictMath.abs;
 
 public class GuessFactor {
 
     public final double guessFactor;
+    public final LxxRobot launcherStateAtTargetTime;
+    public final LxxRobot victimStateAtTargetTime;
 
-    public GuessFactor(double bearingOffset, double mae, double lateralDirection) {
+    public GuessFactor(double bearingOffset, double mae, double lateralDirection, LxxRobot launcherStateAtTargetTime, LxxRobot victimStateAtTargetTime) {
+        this.launcherStateAtTargetTime = launcherStateAtTargetTime;
+        this.victimStateAtTargetTime = victimStateAtTargetTime;
         assert !Double.isNaN(lateralDirection);
 
         guessFactor = bearingOffset / mae * lateralDirection;

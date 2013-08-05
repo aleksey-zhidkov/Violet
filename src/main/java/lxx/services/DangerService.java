@@ -5,6 +5,7 @@ import lxx.events.BulletDetectedEventListener;
 import lxx.events.BulletGoneEventListener;
 import lxx.logs.MovementLog;
 import lxx.model.LxxBullet;
+import lxx.model.LxxRobot;
 import lxx.model.LxxWave;
 import lxx.paint.Canvas;
 import lxx.paint.Circle;
@@ -34,10 +35,12 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
     public void onBulletDetected(LxxBullet bullet) {
         assert bullet.wave.launcher.prevState.defined() && bullet.wave.victim.prevState.defined();
 
-        simpleHitsLog.addEntry(bullet.wave.launcher.prevState.get(), bullet.wave.victim.prevState.get(),
+        final LxxRobot launcher = bullet.wave.launcher.prevState.get();
+        final LxxRobot victim = bullet.wave.victim.prevState.get();
+        simpleHitsLog.addEntry(launcher, victim,
                 new GuessFactor(Utils.normalRelativeAngle(bullet.heading - bullet.wave.noBearingOffset),
                         LxxUtils.getMaxEscapeAngle(bullet.speed),
-                        LxxUtils.lateralDirection(bullet.wave, bullet.wave.victim.prevState.get())));
+                        LxxUtils.lateralDirection(bullet.wave, victim), launcher, victim));
     }
 
     @Override
@@ -72,10 +75,13 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
         final double bearingOffset = Utils.normalRelativeAngle(alpha - wave.noBearingOffset);
         final double robotWidthInRadians = LxxUtils.getRobotWidthInRadians(alpha, firePos.distance(pnt));
 
+        double totalDanger = 0;
         double bulletsDanger = 0;
         final double hiEffectDist = robotWidthInRadians * 0.75;
         final double lowEffectDist = robotWidthInRadians * 2.55;
         for (ScoredBearingOffset bo : predictedBearingOffsets) {
+            totalDanger += bo.score;
+
             if (bo.bearingOffset < bearingOffset - lowEffectDist) {
                 continue;
             } else if (bo.bearingOffset > bearingOffset + lowEffectDist) {
@@ -83,14 +89,14 @@ public class DangerService implements BulletDetectedEventListener, BulletGoneEve
             }
             final double dist = abs(bearingOffset - bo.bearingOffset);
             if (dist < hiEffectDist) {
-                bulletsDanger += (2 - (dist / hiEffectDist)) * bo.score;
+                bulletsDanger += (1 - (dist / hiEffectDist)) * bo.score;
             } else if (dist < lowEffectDist) {
-                bulletsDanger += (1 - (dist / lowEffectDist)) * bo.score;
+                bulletsDanger += (1 - (dist / lowEffectDist)) * bo.score / 2;
             }
         }
 
-        assert bulletsDanger >= 0;
-        return bulletsDanger;
+        assert bulletsDanger >= 0 && bulletsDanger <= totalDanger;
+        return bulletsDanger / totalDanger;
     }
 
     private class createWaveDangerInfo implements F1<LxxWave, WaveDangerInfoImpl> {
