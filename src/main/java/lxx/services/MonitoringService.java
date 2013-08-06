@@ -19,6 +19,8 @@ public final class MonitoringService {
 
     private static final Properties props = new Properties();
     private static final Map<String, LxxRobot> robots = new TreeMap<String, LxxRobot>();
+    private static final Map<String, String> robotHitRates = new HashMap<String, String>();
+
     private static int robotHits;
     private static int wallHits;
 
@@ -46,6 +48,10 @@ public final class MonitoringService {
 
     public static void wallHitted() {
         wallHits++;
+    }
+
+    public static void setRobotHitRate(String robotName, String hitRate) {
+        robotHitRates.put(robotName, hitRate);
     }
 
     public static String formatData() {
@@ -84,11 +90,16 @@ public final class MonitoringService {
         final StringBuilder res = new StringBuilder();
 
         res.append(robot.name).append(":\n");
+        res.append("Hit rate: ").append(robotHitRates.get(robot.name)).append('\n');
         res.append("Energy: ").append(String.format(FOUR_DIGITS_DOUBLE_FORMAT, robot.energy)).append('\n');
         res.append("Gun heat: ").append(String.format(FOUR_DIGITS_DOUBLE_FORMAT, robot.gunHeat)).append('\n');
 
         for (LxxWave wave : robot.bulletsInAir) {
             res.append(formatWave(wave)).append('\n');
+        }
+        // placeholders for bullets in air
+        for (int i = 0; i < 3 - robot.bulletsInAir.size(); i++) {
+            res.append("\n\n");
         }
 
         return res.toString();
@@ -102,5 +113,6 @@ public final class MonitoringService {
 
         return res.toString();
     }
+
 
 }

@@ -1,9 +1,6 @@
 package lxx;
 
-import ags.utils.KdTree;
 import lxx.gun.GFGun;
-import lxx.logs.KdTreeMovementLog;
-import lxx.logs.SimpleLocationFactory;
 import lxx.model.BattleState;
 import lxx.services.*;
 import lxx.movement.WaveSurfingMovement;
@@ -13,7 +10,6 @@ import lxx.paint.Canvas;
 import lxx.paint.LxxGraphics;
 import lxx.strategy.*;
 import lxx.utils.BattleRules;
-import lxx.utils.GuessFactor;
 import lxx.utils.LxxConstants;
 import lxx.utils.func.F1;
 import lxx.utils.func.LxxCollections;
@@ -35,8 +31,11 @@ public class Violet extends AdvancedRobot {
     public static final Color primaryColor = new Color(40, 6, 78);
     public static final Color secondaryColor = new Color(218, 177, 40);
     public static final Color primaryColor155 = new Color(40, 6, 78, 155);
-    private static final StaticData staticData = new StaticData();
-    final scannedRobotEvent scannedRobotEvent = new scannedRobotEvent();
+
+    private static final StaticDataStorage staticDataStorage = new StaticDataStorage();
+
+    private  final scannedRobotEvent scannedRobotEvent = new scannedRobotEvent();
+
     private BattleState battleState;
     private BattleRules rules;
     private Strategy[] strategies;
@@ -80,12 +79,7 @@ public class Violet extends AdvancedRobot {
     }
 
     private void initContext(String opponentName, BattleRules rules) {
-        final KdTreeMovementLog<GuessFactor> enemySimpleMovementLog =
-                new KdTreeMovementLog<GuessFactor>(staticData.enemyMovementKdTree, StaticData.simpleLocFactory);
-        final KdTreeMovementLog<GuessFactor> mySimpleMovementLog =
-                new KdTreeMovementLog<GuessFactor>(staticData.myMovementKdTree, StaticData.simpleLocFactory);
-
-        final Context ctx = new Context(mySimpleMovementLog, enemySimpleMovementLog, getName(), opponentName);
+        final Context ctx = new Context(staticDataStorage, getName(), opponentName);
         battleStateService = new BattleStateService(ctx);
 
         final WaveSurfingMovement waveSurfingMovement =
@@ -163,7 +157,7 @@ public class Violet extends AdvancedRobot {
         try {
             battleState = battleStateService.updateState(rules, battleState, se.getStatus(), allEvents, turnDecision);
 
-            assert se.getTime() >= rules.initialGunHeat / rules.gunCoolingRate || Utils.isNear(battleState.opponent.gunHeat, battleState.me.gunHeat)
+            assert se.getTime() >= BattleRules.initialGunHeat / rules.gunCoolingRate || Utils.isNear(battleState.opponent.gunHeat, battleState.me.gunHeat)
                     : se.getTime() + ": " + battleState.me.gunHeat + ", " + battleState.opponent.gunHeat;
 
             MonitoringService.setRobot(battleState.me);
@@ -176,27 +170,16 @@ public class Violet extends AdvancedRobot {
 
     @Override
     public void onKeyReleased(KeyEvent e) {
-        if (e.getKeyChar() == 'w') {
-            Canvas.WS.switchEnabled();
-        } else if (e.getKeyChar() == 'b') {
-            Canvas.BATTLE_STATE.switchEnabled();
+        for (Canvas c : Canvas.values()) {
+            if (c.getEnableSwitchKey() == e.getKeyChar()) {
+                c.switchEnabled();
+            }
         }
     }
 
     @Override
     public void onPaint(Graphics2D g) {
         Canvas.setPaintEnabled(true);
-    }
-
-    private static final class StaticData {
-
-        private static final SimpleLocationFactory simpleLocFactory = new SimpleLocationFactory();
-        private final KdTree.SqrEuclid<GuessFactor> enemyMovementKdTree =
-                new KdTree.SqrEuclid<GuessFactor>(simpleLocFactory.getDimensionCount(), Integer.MAX_VALUE);
-        private final KdTree.SqrEuclid<GuessFactor> myMovementKdTree =
-                new KdTree.SqrEuclid<GuessFactor>(simpleLocFactory.getDimensionCount(), Integer.MAX_VALUE);
-
-
     }
 
     public class FireCondition extends Condition {

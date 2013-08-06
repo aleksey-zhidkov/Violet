@@ -1,10 +1,7 @@
 package lxx.services;
 
 import lxx.events.*;
-import lxx.logs.KdTreeMovementLog;
-import lxx.logs.MovementLog;
 import lxx.model.LxxRobot;
-import lxx.utils.GuessFactor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,8 +14,7 @@ public class Context {
     private final String myName;
     private final EventsChannel battleEventsChannel;
 
-    public Context(KdTreeMovementLog<GuessFactor> mySimpleMovementLog, MovementLog<GuessFactor> enemySimpleMovementLog,
-                   String myName, String opponentName) {
+    public Context(StaticDataStorage dataStorage, String myName, String opponentName) {
         assert !LxxRobot.UNKNOWN.equals(myName);
         assert !LxxRobot.UNKNOWN.equals(opponentName);
         this.myName = myName;
@@ -31,13 +27,21 @@ public class Context {
 
         battleEventsChannel = new EventsChannel();
 
-        dangerService = new DangerService(mySimpleMovementLog);
+        dangerService = new DangerService(dataStorage);
         opponentBulletsEventsChannel.addBulletDetectedEventListener(dangerService);
         opponentBulletsEventsChannel.addWaveGoneEventListener(dangerService);
 
-        enemyLogService = new GFMovementLogServiceImpl(enemySimpleMovementLog, myName, opponentName);
+        enemyLogService = new GFMovementLogServiceImpl(dataStorage, myName, opponentName);
         myBulletsEventsChannel.addBulletFiredListener(enemyLogService);
         battleEventsChannel.addTickEventsListener(enemyLogService);
+
+        final StatisticsService myStatisticsService = new StatisticsService(dataStorage, myName);
+        myBulletsEventsChannel.addBulletDetectedEventListener(myStatisticsService);
+        myBulletsEventsChannel.addWaveGoneEventListener(myStatisticsService);
+
+        final StatisticsService opponentStatisticsService = new StatisticsService(dataStorage, opponentName);
+        opponentBulletsEventsChannel.addBulletDetectedEventListener(opponentStatisticsService);
+        opponentBulletsEventsChannel.addWaveGoneEventListener(opponentStatisticsService);
     }
 
     public EventsChannel getMyBulletsEventsChannel() {

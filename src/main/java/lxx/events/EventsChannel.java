@@ -11,7 +11,7 @@ public class EventsChannel {
 
     private final List<BulletDetectedEventListener> bulletDetectedEventListeners = new ArrayList<BulletDetectedEventListener>();
     private final List<BulletFiredEventListener> bulletFiredEventListeners = new ArrayList<BulletFiredEventListener>();
-    private final List<BulletGoneEventListener> bulletGoneEventListeners = new ArrayList<BulletGoneEventListener>();
+    private final List<WaveGoneEventListener> waveGoneEventListeners = new ArrayList<WaveGoneEventListener>();
     private final List<TickEventListener> tickEventListeners = new ArrayList<TickEventListener>();
 
     public void fireEvent(LxxEvent event) {
@@ -27,7 +27,7 @@ public class EventsChannel {
             }
         } else if (event instanceof BulletGoneEvent) {
             final LxxWave wave = ((BulletGoneEvent) event).wave;
-            for (BulletGoneEventListener listener : bulletGoneEventListeners) {
+            for (WaveGoneEventListener listener : waveGoneEventListeners) {
                 listener.onWaveGone(wave);
             }
         } else if (event instanceof TickEvent) {
@@ -44,8 +44,8 @@ public class EventsChannel {
         bulletDetectedEventListeners.add(listener);
     }
 
-    public void addWaveGoneEventListener(BulletGoneEventListener listener) {
-        bulletGoneEventListeners.add(listener);
+    public void addWaveGoneEventListener(WaveGoneEventListener listener) {
+        waveGoneEventListeners.add(listener);
     }
 
     public void addBulletFiredListener(BulletFiredEventListener listener) {

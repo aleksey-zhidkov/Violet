@@ -98,11 +98,11 @@ public class BattleStateService {
         }
     }
 
-    private Option<LxxBullet> bulletGone(LxxRobotBuilder launcherBulder, List<LxxWave> launcherBullets, Bullet bullet, long time) {
+    private Option<LxxBullet> bulletGone(LxxRobotBuilder launcherBulder, List<LxxWave> launcherBullets, Bullet bullet, long time, LxxBulletState state) {
         final Option<LxxWave> wave = findWave(launcherBullets, bullet, time);
         if (wave.defined()) {
             launcherBulder.bulletGone(wave.get());
-            final LxxBullet detectedBullet = new LxxBullet(wave.get(), bullet);
+            final LxxBullet detectedBullet = new LxxBullet(wave.get(), bullet, state);
             context.getBulletsEventsChannel(launcherBulder.getName()).fireEvent(new BulletDetectedEvent(detectedBullet));
             return Option.of(detectedBullet);
         }
@@ -153,7 +153,7 @@ public class BattleStateService {
             opponentBuilder.name(event.getBullet().getVictim());
             opponentBuilder.alive(event.getEnergy() > 0);
 
-            bulletGone(myBuilder, battleState.me.bulletsInAir, event.getBullet(), event.getTime());
+            bulletGone(myBuilder, battleState.me.bulletsInAir, event.getBullet(), event.getTime(), LxxBulletState.HIT_ROBOT);
         }
     }
 
@@ -175,7 +175,7 @@ public class BattleStateService {
             final Bullet bullet = event.getBullet();
             opponentBuilder.name(bullet.getName());
 
-            bulletGone(opponentBuilder, battleState.opponent.bulletsInAir, event.getBullet(), event.getTime());
+            bulletGone(opponentBuilder, battleState.opponent.bulletsInAir, event.getBullet(), event.getTime(), LxxBulletState.HIT_ROBOT);
         }
     }
 
@@ -220,8 +220,8 @@ public class BattleStateService {
     private class BulletHitBulletEventProcessor implements EventProcessor<BulletHitBulletEvent> {
         @Override
         public void process(BulletHitBulletEvent event, BattleState battleState, LxxRobotBuilder myBuilder, LxxRobotBuilder opponentBuilder, TurnDecision lastTurnDecision) {
-            bulletGone(myBuilder, battleState.me.bulletsInAir, event.getBullet(), event.getTime());
-            bulletGone(opponentBuilder, battleState.opponent.bulletsInAir, event.getHitBullet(), event.getTime());
+            bulletGone(myBuilder, battleState.me.bulletsInAir, event.getBullet(), event.getTime(), LxxBulletState.HIT_BULLET);
+            bulletGone(opponentBuilder, battleState.opponent.bulletsInAir, event.getHitBullet(), event.getTime(), LxxBulletState.HIT_BULLET);
         }
     }
 
@@ -237,7 +237,7 @@ public class BattleStateService {
                 myBuilder.fire(power);
                 myBuilder.bulletFired(wave);
 
-                context.getMyBulletsEventsChannel().fireEvent(new BulletFiredEvent(new LxxBullet(wave, bullet)));
+                context.getMyBulletsEventsChannel().fireEvent(new BulletFiredEvent(new LxxBullet(wave, bullet, LxxBulletState.COMING)));
             }
         }
     }

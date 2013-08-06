@@ -2,6 +2,7 @@ package lxx.utils;
 
 public class BattleRules {
 
+    // robocode bug workaround: sometimes on first call getGunHeat returns 4.02
     public static final double initialGunHeat = 3;
 
     public final BattleField field;

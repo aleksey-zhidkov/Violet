@@ -2,8 +2,9 @@ package lxx.services;
 
 import ags.utils.KdTree;
 import lxx.events.BulletDetectedEventListener;
-import lxx.events.BulletGoneEventListener;
+import lxx.events.WaveGoneEventListener;
 import lxx.logs.MovementLog;
+import lxx.logs.SimpleLocationFactory;
 import lxx.model.LxxBullet;
 import lxx.model.LxxRobot;
 import lxx.model.LxxWave;
@@ -21,14 +22,19 @@ import java.util.Map;
 
 import static java.lang.Math.abs;
 
-public class DangerService implements BulletDetectedEventListener, BulletGoneEventListener {
+public class DangerService implements BulletDetectedEventListener, WaveGoneEventListener {
 
     private final Map<LxxWave, WaveDangerInfoImpl> waveDangerInfos = new LxxHashMap<LxxWave, WaveDangerInfoImpl>(new createWaveDangerInfo());
 
     private final MovementLog<GuessFactor> simpleHitsLog;
 
-    public DangerService(MovementLog<GuessFactor> simpleHitsLog) {
-        this.simpleHitsLog = simpleHitsLog;
+    public DangerService(StaticDataStorage dataStorage) {
+        final String id = "My movement kdTree";
+        if (!dataStorage.containsData(id)) {
+            final SimpleLocationFactory locationFactory = new SimpleLocationFactory();
+            dataStorage.saveData(id, new KdTree.SqrEuclid<GuessFactor>(locationFactory.getDimensionCount(), Integer.MIN_VALUE));
+        }
+        this.simpleHitsLog = dataStorage.getData(id);
     }
 
     @Override

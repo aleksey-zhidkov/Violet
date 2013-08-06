@@ -3,7 +3,9 @@ package lxx.services;
 import ags.utils.KdTree;
 import lxx.events.BulletFiredEventListener;
 import lxx.events.TickEventListener;
+import lxx.logs.KdTreeMovementLog;
 import lxx.logs.MovementLog;
+import lxx.logs.SimpleLocationFactory;
 import lxx.model.BattleState;
 import lxx.model.LxxBullet;
 import lxx.model.LxxRobot;
@@ -25,8 +27,13 @@ public class GFMovementLogServiceImpl implements TickEventListener, GFMovementLo
     private final String observer;
     private final String observable;
 
-    public GFMovementLogServiceImpl(MovementLog<GuessFactor> log, String observerName, String observable) {
-        this.log = log;
+    public GFMovementLogServiceImpl(StaticDataStorage dataStorage, String observerName, String observable) {
+        final String id = "Enemy movement kdTree";
+        final SimpleLocationFactory locationFactory = new SimpleLocationFactory();
+        if (!dataStorage.containsData(id)) {
+            dataStorage.saveData(id, new KdTree.SqrEuclid<GuessFactor>(locationFactory.getDimensionCount(), Integer.MAX_VALUE));
+        }
+        this.log = new KdTreeMovementLog<GuessFactor>(dataStorage.<KdTree<GuessFactor>>getData(id), locationFactory);
         this.observer = observerName;
         this.observable = observable;
     }

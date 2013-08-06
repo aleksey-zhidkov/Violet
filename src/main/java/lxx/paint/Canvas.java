@@ -6,8 +6,8 @@ import java.util.List;
 
 public enum Canvas {
 
-    BATTLE_STATE(true),
-    WS(true);
+    BATTLE_STATE(true, 'b'),
+    WS(true, 'w');
 
     private static boolean paintEnabled;
 
@@ -15,10 +15,13 @@ public enum Canvas {
 
     private final boolean autoReset;
 
+    private final char enableSwitchKey;
+
     private boolean enabled;
 
-    Canvas(boolean autoReset) {
+    Canvas(boolean autoReset, char enableSwitchKey) {
         this.autoReset = autoReset;
+        this.enableSwitchKey = enableSwitchKey;
     }
 
     public void switchEnabled() {
@@ -31,6 +34,10 @@ public enum Canvas {
 
     public boolean enabled() {
         return enabled & paintEnabled;
+    }
+
+    public char getEnableSwitchKey() {
+        return enableSwitchKey;
     }
 
     public void reset() {
