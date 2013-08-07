@@ -34,6 +34,7 @@ public class StatisticsService implements WaveGoneEventListener, BulletDetectedE
     @Override
     public void onWaveGone(LxxWave wave) {
         hitRate.miss();
+        MonitoringService.setRobotHitRate(robotName, hitRate.toString());
     }
 
 }

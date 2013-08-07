@@ -3,6 +3,7 @@ package lxx.services;
 import ags.utils.KdTree;
 import lxx.events.BulletDetectedEventListener;
 import lxx.events.WaveGoneEventListener;
+import lxx.logs.KdTreeMovementLog;
 import lxx.logs.MovementLog;
 import lxx.logs.SimpleLocationFactory;
 import lxx.model.LxxBullet;
@@ -30,11 +31,11 @@ public class DangerService implements BulletDetectedEventListener, WaveGoneEvent
 
     public DangerService(StaticDataStorage dataStorage) {
         final String id = "My movement kdTree";
+        final SimpleLocationFactory locationFactory = new SimpleLocationFactory();
         if (!dataStorage.containsData(id)) {
-            final SimpleLocationFactory locationFactory = new SimpleLocationFactory();
             dataStorage.saveData(id, new KdTree.SqrEuclid<GuessFactor>(locationFactory.getDimensionCount(), Integer.MIN_VALUE));
         }
-        this.simpleHitsLog = dataStorage.getData(id);
+        this.simpleHitsLog = new KdTreeMovementLog<GuessFactor>(dataStorage.<KdTree<GuessFactor>>getData(id), locationFactory);
     }
 
     @Override
