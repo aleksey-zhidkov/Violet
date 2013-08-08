@@ -22,11 +22,11 @@ public class OrbitalMovement {
         this.desiredDistance = desiredDistance;
     }
 
-    public MovementDecision getMovementDecision(LxxRobot me, APoint center, OrbitDirection direction) {
+    public MovementDecision getMovementDecision(LxxRobot me, APoint center, OrbitDirection direction, double maxAttackAngle) {
         final double desiredHeading;
         final double smoothedHeading;
         if (direction.direction != 0) {
-            desiredHeading = getDesiredHeading(me, center, direction);
+            desiredHeading = getDesiredHeading(me, center, direction, maxAttackAngle);
             smoothedHeading = battleField.smoothWalls(me.position, desiredHeading, direction.direction == 1);
         } else {
             desiredHeading = Utils.normalAbsoluteAngle(center.angleTo(me.position) + LxxConstants.RADIANS_90);
@@ -48,13 +48,12 @@ public class OrbitalMovement {
         return new MovementDecision(speed * (wantToGoFront ? 1 : -1), turnRate);
     }
 
-    private double getDesiredHeading(LxxRobot me, APoint center, OrbitDirection direction) {
+    private double getDesiredHeading(LxxRobot me, APoint center, OrbitDirection direction, double maxAttackAngle) {
         final double distanceBetween = me.position.distance(center);
 
         final double distanceDiff = distanceBetween - desiredDistance;
         final double attackAngleKoeff = distanceDiff / desiredDistance;
 
-        final double maxAttackAngle = LxxConstants.RADIANS_100;
         final double minAttackAngle = LxxConstants.RADIANS_80;
         final double attackAngle = LxxConstants.RADIANS_90 + (LxxConstants.RADIANS_30 * attackAngleKoeff);
 
@@ -64,5 +63,7 @@ public class OrbitalMovement {
                 limit(minAttackAngle, attackAngle, maxAttackAngle) * direction.direction);
     }
 
-
+    public double getDesiredDistance() {
+        return desiredDistance;
+    }
 }
