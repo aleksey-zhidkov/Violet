@@ -16,7 +16,7 @@ public final class LxxCollections {
             }
         }
 
-        return Option.NONE;
+        return Option.none();
     }
 
     public static <T> List<T> filter(List<T> myBulletsInAir, F1<T, Boolean> predicate) {
@@ -25,20 +25,6 @@ public final class LxxCollections {
         for (final T cnd : myBulletsInAir) {
             if (predicate.f(cnd)) {
                 res.add(cnd);
-            }
-        }
-
-        return res;
-    }
-
-    public static <T> List<T>[] split(List<T> myBulletsInAir, F1<T, Boolean> predicate) {
-        final ArrayList[] res = {new ArrayList<T>(), new ArrayList<T>()};
-
-        for (final T cnd : myBulletsInAir) {
-            if (predicate.f(cnd)) {
-                res[0].add(cnd);
-            } else {
-                res[1].add(cnd);
             }
         }
 

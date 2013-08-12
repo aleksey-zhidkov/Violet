@@ -14,7 +14,7 @@ class LxxRobotBuilderSpec extends Specification {
 
         given:
         int elapsedTime = 5
-        def builder = new LxxRobotBuilder(stdRules, Option.NONE, elapsedTime, 1)
+        def builder = new LxxRobotBuilder(stdRules, Option.none(), elapsedTime, 1)
 
         when:
         def robot = builder.build()

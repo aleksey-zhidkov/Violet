@@ -107,7 +107,7 @@ public class BattleStateService {
             context.getBulletsEventsChannel(launcherBulder.getName()).fireEvent(new BulletDetectedEvent(detectedBullet));
             return Option.of(detectedBullet);
         }
-        return Option.NONE;
+        return Option.none();
     }
 
 

@@ -1,8 +1,9 @@
 package lxx.utils.func;
 
+@SuppressWarnings("unchecked")
 public abstract class Option<T> {
 
-    public static final Option NONE = new None();
+    private static final Option NONE = new None();
 
     public static <T> Option<T> of(T value) {
         if (value == null) {
@@ -17,8 +18,6 @@ public abstract class Option<T> {
     public abstract T get();
 
     public abstract T getOr(T defaultValue);
-
-    public abstract T getOr(RuntimeException failReason);
 
     public abstract <R> Option<R> map(F1<T, R> mapper);
 
@@ -54,11 +53,6 @@ public abstract class Option<T> {
         }
 
         @Override
-        public T getOr(RuntimeException failReason) {
-            return value;
-        }
-
-        @Override
         public <R> Option<R> map(F1<T, R> mapper) {
             return Option.of(mapper.f(value));
         }
@@ -89,11 +83,6 @@ public abstract class Option<T> {
         @Override
         public T getOr(T defaultValue) {
             return defaultValue;
-        }
-
-        @Override
-        public T getOr(RuntimeException failReason) {
-            throw failReason;
         }
 
         @Override
