@@ -141,10 +141,15 @@ public final class LxxUtils {
                 acceleration <= Rules.ACCELERATION + LxxConstants.EPSILON;
     }
 
-    // turnRate = 10 - 0.75 * speed
-    // turnRate - 10 = - 0.75 * speed
-    // speed = (10 - turnRate) / 0.75
-    public static double getRequiredSpeed(double turnRate) {
-        return max(0, (10 - toDegrees(turnRate) / 0.75));
+
+    public static double getStopDistance(double speed) {
+        double currentSpeed = speed;
+        double distance = 0;
+        while (currentSpeed > 0) {
+            currentSpeed -= Rules.DECELERATION;
+            distance += speed;
+        }
+        return distance;
     }
+
 }

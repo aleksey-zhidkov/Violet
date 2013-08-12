@@ -7,16 +7,13 @@ import java.util.List;
 public enum Canvas {
 
     BATTLE_STATE(true, 'b'),
-    WS(true, 'w');
+    WS_MOVEMENT(false, 'w'),
+    WS_WAVES(true, 'w');
 
     private static boolean paintEnabled;
-
     private final List<DrawCommand> drawables = new LinkedList<DrawCommand>();
-
     private final boolean autoReset;
-
     private final char enableSwitchKey;
-
     private boolean enabled;
 
     Canvas(boolean autoReset, char enableSwitchKey) {
@@ -24,12 +21,12 @@ public enum Canvas {
         this.enableSwitchKey = enableSwitchKey;
     }
 
-    public void switchEnabled() {
-        enabled = !enabled;
-    }
-
     public static void setPaintEnabled(boolean paintEnabled) {
         Canvas.paintEnabled = paintEnabled;
+    }
+
+    public void switchEnabled() {
+        enabled = !enabled;
     }
 
     public boolean enabled() {
@@ -45,7 +42,9 @@ public enum Canvas {
     }
 
     public void draw(Drawable d, Color c) {
-        drawables.add(new DrawCommand(d, c));
+        if (enabled) {
+            drawables.add(new DrawCommand(d, c));
+        }
     }
 
     public void exec(LxxGraphics g) {

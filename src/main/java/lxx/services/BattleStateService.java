@@ -63,6 +63,7 @@ public class BattleStateService {
         meBuilder.name(rules.myName);
 
         for (Event e : allEvents) {
+            //noinspection unchecked
             final EventProcessor<Event> ep = (EventProcessor<Event>) eventProcessors.get(e.getClass());
             if (ep != null) {
                 ep.process(e, battleState, meBuilder, opponentBuilder, lastTurnDecision);
@@ -71,7 +72,7 @@ public class BattleStateService {
 
         final Double opponentFirePower = opponentBuilder.getFirePower();
         if (opponentFirePower > 0) {
-            opponentBuilder.bulletFired(new LxxWave(battleState.opponent, battleState.me, Rules.getBulletSpeed(opponentFirePower), battleState.time));
+            opponentBuilder.bulletFired(new LxxWave(battleState.opponent, battleState.me, Rules.getBulletSpeed(opponentFirePower), battleState.time, false));
         }
 
         if (battleState.me != null) {
@@ -232,7 +233,7 @@ public class BattleStateService {
             if (condition instanceof Violet.FireCondition) {
                 final Bullet bullet = ((Violet.FireCondition) condition).bullet;
                 final double power = bullet.getPower();
-                final LxxWave wave = new LxxWave(battleState.me, battleState.opponent, Rules.getBulletSpeed(power), battleState.time);
+                final LxxWave wave = new LxxWave(battleState.me, battleState.opponent, Rules.getBulletSpeed(power), battleState.time, false);
 
                 myBuilder.fire(power);
                 myBuilder.bulletFired(wave);

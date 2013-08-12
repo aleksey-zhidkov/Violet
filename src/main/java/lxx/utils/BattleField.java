@@ -26,6 +26,9 @@ public class BattleField {
     public final LxxPoint center;
     public final int fieldDiagonal;
 
+    public final IntervalDouble noSmoothX;
+    public final IntervalDouble noSmoothY;
+
     public final int width;
     public final int height;
 
@@ -70,6 +73,9 @@ public class BattleField {
 
         center = new LxxPoint(rightX / 2D, topY / 2D);
         fieldDiagonal = (int) new LxxPoint(x, y).distance(width, height);
+
+        noSmoothX = new IntervalDouble(WALL_STICK, width - WALL_STICK);
+        noSmoothY = new IntervalDouble(WALL_STICK, height - WALL_STICK);
     }
 
     // this method is called very often, so keep it optimal
@@ -123,6 +129,9 @@ public class BattleField {
     }
 
     public double smoothWalls(LxxPoint pnt, double desiredHeading, boolean isClockwise) {
+        if (noSmoothX.contains(pnt.x) && noSmoothY.contains(pnt.y)) {
+            return desiredHeading;
+        }
         return smoothWall(getWall(pnt, desiredHeading), pnt, desiredHeading, isClockwise);
     }
 

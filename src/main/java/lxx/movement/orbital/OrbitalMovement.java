@@ -7,9 +7,7 @@ import lxx.utils.BattleField;
 import lxx.utils.LxxConstants;
 import robocode.util.Utils;
 
-import static java.lang.Math.*;
 import static lxx.utils.LxxUtils.*;
-import static robocode.Rules.*;
 import static robocode.util.Utils.normalRelativeAngle;
 
 public class OrbitalMovement {
@@ -33,19 +31,15 @@ public class OrbitalMovement {
             smoothedHeading = desiredHeading;
         }
 
-        return toMovementDecision(me, direction.speed, smoothedHeading, !Utils.isNear(desiredHeading, smoothedHeading));
+        return toMovementDecision(me, direction.speed, smoothedHeading);
     }
 
-    private MovementDecision toMovementDecision(LxxRobot robot, double desiredSpeed, double desiredHeading, boolean forceTurn) {
+    private MovementDecision toMovementDecision(LxxRobot robot, double desiredSpeed, double desiredHeading) {
         final boolean wantToGoFront = anglesDiff(robot.heading, desiredHeading) < LxxConstants.RADIANS_90;
         final double normalizedDesiredHeading = wantToGoFront ? desiredHeading : Utils.normalAbsoluteAngle(desiredHeading + LxxConstants.RADIANS_180);
 
         final double turnRemaining = normalRelativeAngle(normalizedDesiredHeading - robot.heading);
-        final double turnRateRadiansLimit = getTurnRateRadians(robot.speed);
-        final double turnRate = limit(-turnRateRadiansLimit, turnRemaining, turnRateRadiansLimit);
-
-        final double speed = forceTurn ? min(desiredSpeed, getRequiredSpeed(abs(turnRemaining - abs(turnRate)))) : desiredSpeed;
-        return new MovementDecision(speed * (wantToGoFront ? 1 : -1), turnRate);
+        return new MovementDecision(desiredSpeed * (wantToGoFront ? 1 : -1), turnRemaining);
     }
 
     private double getDesiredHeading(LxxRobot me, APoint center, OrbitDirection direction, double minAttackAngle) {

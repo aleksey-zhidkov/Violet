@@ -15,10 +15,12 @@ public class LxxWave implements APoint {
     public final double noBearingOffset;
     public final double speed;
     public final long time;
+    public final boolean imaginary;
 
-    public LxxWave(LxxRobot launcher, LxxRobot victim, double speed, long time) {
+    public LxxWave(LxxRobot launcher, LxxRobot victim, double speed, long time, boolean imaginary) {
         this.launcher = launcher;
         this.victim = victim;
+        this.imaginary = imaginary;
         this.noBearingOffset = launcher.angleTo(victim);
         this.speed = speed;
         this.time = time;

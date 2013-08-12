@@ -35,8 +35,8 @@ public class IntervalDouble implements Comparable<IntervalDouble> {
         return (a + b) / 2;
     }
 
-    public boolean contains(double x) {
-        return a <= x && b >= x;
+    public boolean contains(double value) {
+        return a <= value && b >= value;
     }
 
     public IntervalDouble extend(double x) {

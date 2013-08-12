@@ -3,7 +3,6 @@ package lxx.model;
 import lxx.utils.*;
 import lxx.utils.func.F1;
 import lxx.utils.func.Option;
-import robocode.Rules;
 
 import java.util.List;
 
@@ -31,22 +30,10 @@ public class LxxRobot implements APoint {
             return lxxRobot.velocity;
         }
     };
-    public static final F1<LxxRobot, Long> toTime = new F1<LxxRobot, Long>() {
-        @Override
-        public Long f(LxxRobot lxxRobot) {
-            return lxxRobot.time;
-        }
-    };
     public static final F1<LxxRobot, Long> toLastScanTime = new F1<LxxRobot, Long>() {
         @Override
         public Long f(LxxRobot lxxRobot) {
             return lxxRobot.lastScanTime;
-        }
-    };
-    public static final F1<LxxRobot, LxxPoint> toPosition = new F1<LxxRobot, LxxPoint>() {
-        @Override
-        public LxxPoint f(LxxRobot lxxRobot) {
-            return lxxRobot.position;
         }
     };
     public static final F1<LxxRobot, Boolean> toAlive = new F1<LxxRobot, Boolean>() {
@@ -100,10 +87,6 @@ public class LxxRobot implements APoint {
     }
 
     public LxxRobot(LxxRobot original, double turnRate, double desiredVelocity) {
-        assert turnRate >= -Rules.getTurnRateRadians(original.speed) &&
-                turnRate <= Rules.getTurnRateRadians(original.speed)
-                : turnRate + ":" + original.speed;
-
         prevState = Option.of(original);
         velocity = LxxUtils.getNewVelocity(original.velocity, desiredVelocity);
         speed = abs(velocity);

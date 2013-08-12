@@ -46,9 +46,9 @@ public class DangerService implements BulletDetectedEventListener, WaveGoneEvent
         final LxxRobot launcher = bullet.wave.launcher.prevState.get();
         final LxxRobot victim = bullet.wave.victim.prevState.get();
         simpleHitsLog.addEntry(launcher, victim,
-                new GuessFactor(Utils.normalRelativeAngle(bullet.heading - bullet.wave.noBearingOffset),
+                new GuessFactor(Utils.normalRelativeAngle(bullet.heading - launcher.angleTo(victim)),
                         LxxUtils.getMaxEscapeAngle(bullet.speed),
-                        LxxUtils.lateralDirection(bullet.wave, victim), launcher, victim));
+                        LxxUtils.lateralDirection(launcher, victim), launcher, victim));
     }
 
     @Override
@@ -112,7 +112,7 @@ public class DangerService implements BulletDetectedEventListener, WaveGoneEvent
         @Override
         public WaveDangerInfoImpl f(LxxWave lxxWave) {
             return new WaveDangerInfoImpl(lxxWave,
-                    visits(lxxWave, simpleHitsLog.getEntries(lxxWave.launcher, lxxWave.victim, simpleHitsLog.size())));
+                    visits(lxxWave, simpleHitsLog.getEntries(lxxWave.launcher, lxxWave.victim, (int) Math.sqrt(simpleHitsLog.size()))));
         }
 
         private List<ScoredBearingOffset> visits(LxxWave wave, List<KdTree.Entry<GuessFactor>> entries) {
