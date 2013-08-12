@@ -7,6 +7,8 @@ import lxx.model.LxxWave;
 import lxx.movement.MovementDecision;
 import lxx.movement.WaveSurfingMovement;
 import lxx.utils.LxxConstants;
+import lxx.utils.func.F1;
+import lxx.utils.func.LxxCollections;
 import robocode.Rules;
 import robocode.util.Utils;
 
@@ -27,10 +29,14 @@ public class DuelStrategy implements Strategy {
 
     @Override
     public TurnDecision getTurnDecision(BattleState battleState) {
-        final List<LxxWave> bulletsInAir = new ArrayList<LxxWave>(battleState.opponent.bulletsInAir);
+        List<LxxWave> bulletsInAir = new ArrayList<LxxWave>(battleState.opponent.bulletsInAir);
         if (!battleState.opponent.alive && bulletsInAir.isEmpty() ||
                 LxxRobot.UNKNOWN.equals(battleState.opponent.name)) {
             return null;
+        }
+
+        if (bulletsInAir.size() > 1) {
+            bulletsInAir = LxxCollections.filter(bulletsInAir, flightTimeLessThan(battleState.me, 2));
         }
 
         if (bulletsInAir.size() < 2) {
@@ -54,5 +60,13 @@ public class DuelStrategy implements Strategy {
         return Utils.normalRelativeAngle(angleToTarget - battleState.me.radarHeading + LxxConstants.RADIANS_10 * sign);
     }
 
+    private static F1<LxxWave, Boolean> flightTimeLessThan(final LxxRobot robot, final int flightTimeLimit) {
+        return new F1<LxxWave, Boolean>() {
+            @Override
+            public Boolean f(LxxWave wave) {
+                return wave.getFlightTime(robot) > flightTimeLimit;
+            }
+        };
+    }
 
 }

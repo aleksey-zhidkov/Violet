@@ -18,6 +18,7 @@ import robocode.util.Utils;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class DangerService implements BulletDetectedEventListener, WaveGoneEvent
         final String id = "My movement kdTree";
         final SimpleLocationFactory locationFactory = new SimpleLocationFactory();
         if (!dataStorage.containsData(id)) {
-            dataStorage.saveData(id, new KdTree.SqrEuclid<GuessFactor>(locationFactory.getDimensionCount(), Integer.MIN_VALUE));
+            dataStorage.saveData(id, new KdTree.SqrEuclid<GuessFactor>(locationFactory.getDimensionCount(), Integer.MAX_VALUE));
         }
         this.simpleHitsLog = new KdTreeMovementLog<GuessFactor>(dataStorage.<KdTree<GuessFactor>>getData(id), locationFactory);
     }
@@ -84,8 +85,8 @@ public class DangerService implements BulletDetectedEventListener, WaveGoneEvent
 
         double totalDanger = 0;
         double bulletsDanger = 0;
-        final double hiEffectDist = robotWidthInRadians * 0.75;
-        final double lowEffectDist = robotWidthInRadians * 2.55;
+        final double hiEffectDist = robotWidthInRadians * 0.45;
+        final double lowEffectDist = robotWidthInRadians;
         for (ScoredBearingOffset bo : predictedBearingOffsets) {
             totalDanger += bo.score;
 
@@ -130,6 +131,8 @@ public class DangerService implements BulletDetectedEventListener, WaveGoneEvent
                         bearingOffset <= LxxConstants.RADIANS_60;
                 visits.add(new ScoredBearingOffset(bearingOffset, score));
             }
+
+            Collections.sort(visits);
 
             return visits;
         }

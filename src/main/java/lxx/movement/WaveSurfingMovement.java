@@ -187,8 +187,8 @@ public class WaveSurfingMovement {
             final double pointDanger = waveDangerInfo.getPointDanger(me);
             final double flightTime = wave.getFlightTime(myRealState.position, myRealState.time);
 
-            // todo: use avg/max flight time instead of 30
-            final double danger = (pointDanger + distDng) * mult * (30 / flightTime);
+            // todo: use first bullet flight time instead of 30
+            final double danger = (pointDanger * 3 + distDng) * mult * (30 / flightTime);
 
             MonitoringService.setDangerComponents(dir, distDng, pointDanger, flightTime, danger);
 

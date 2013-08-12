@@ -22,11 +22,11 @@ public class OrbitalMovement {
         this.desiredDistance = desiredDistance;
     }
 
-    public MovementDecision getMovementDecision(LxxRobot me, APoint center, OrbitDirection direction, double maxAttackAngle) {
+    public MovementDecision getMovementDecision(LxxRobot me, APoint center, OrbitDirection direction, double minAttackAngle) {
         final double desiredHeading;
         final double smoothedHeading;
         if (direction.direction != 0) {
-            desiredHeading = getDesiredHeading(me, center, direction, maxAttackAngle);
+            desiredHeading = getDesiredHeading(me, center, direction, minAttackAngle);
             smoothedHeading = battleField.smoothWalls(me.position, desiredHeading, direction.direction == 1);
         } else {
             desiredHeading = Utils.normalAbsoluteAngle(center.angleTo(me.position) + LxxConstants.RADIANS_90);
@@ -48,19 +48,18 @@ public class OrbitalMovement {
         return new MovementDecision(speed * (wantToGoFront ? 1 : -1), turnRate);
     }
 
-    private double getDesiredHeading(LxxRobot me, APoint center, OrbitDirection direction, double maxAttackAngle) {
+    private double getDesiredHeading(LxxRobot me, APoint center, OrbitDirection direction, double minAttackAngle) {
         final double distanceBetween = me.position.distance(center);
 
         final double distanceDiff = distanceBetween - desiredDistance;
         final double attackAngleKoeff = distanceDiff / desiredDistance;
 
-        final double minAttackAngle = LxxConstants.RADIANS_80;
-        final double attackAngle = LxxConstants.RADIANS_90 + (LxxConstants.RADIANS_30 * attackAngleKoeff);
+        final double attackAngle = LxxConstants.RADIANS_90 + (LxxConstants.RADIANS_90 * attackAngleKoeff);
 
         final double angleToMe = angle(center.x(), center.y(), me.position.x, me.position.y);
 
         return Utils.normalAbsoluteAngle(angleToMe +
-                limit(minAttackAngle, attackAngle, maxAttackAngle) * direction.direction);
+                limit(minAttackAngle, attackAngle, LxxConstants.RADIANS_100) * direction.direction);
     }
 
     public double getDesiredDistance() {
