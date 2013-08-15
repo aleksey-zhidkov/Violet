@@ -6,14 +6,19 @@ import lxx.events.BulletFiredEvent;
 import lxx.events.BulletGoneEvent;
 import lxx.events.TickEvent;
 import lxx.model.*;
+import lxx.paint.Canvas;
+import lxx.paint.Square;
 import lxx.strategy.TurnDecision;
 import lxx.utils.BattleRules;
+import lxx.utils.Logger;
 import lxx.utils.LxxPoint;
 import lxx.utils.LxxUtils;
 import lxx.utils.func.Option;
 import robocode.*;
+import robocode.Event;
 import robocode.util.Utils;
 
+import java.awt.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +28,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
 public class BattleStateService {
+
+    private static final Logger log = Logger.getLogger(BattleStateService.class);
 
     private final Map<Class<? extends Event>, EventProcessor<? extends Event>> eventProcessors = new HashMap<Class<? extends Event>, EventProcessor<? extends Event>>(){{
         put(BulletHitEvent.class, new BulletHitEventProcessor());
@@ -85,6 +92,9 @@ public class BattleStateService {
         final LxxRobot me = meBuilder.build();
         final LxxRobot opponent = opponentBuilder.build();
 
+        Canvas.BATTLE_STATE.draw(new Square(me, battleState.rules.robotWidth), new Color(0, 255, 0, 175));
+        Canvas.BATTLE_STATE.draw(new Square(opponent, battleState.rules.robotWidth), new Color(0, 0, 255, 175));
+
         final BattleState newState = new BattleState(rules, status.getTime(), battleState, me, opponent);
         context.getBattleEventsChannel().fireEvent(new TickEvent(newState));
         return newState;
@@ -106,6 +116,9 @@ public class BattleStateService {
             final LxxBullet detectedBullet = new LxxBullet(wave.get(), bullet, state);
             context.getBulletsEventsChannel(launcherBulder.getName()).fireEvent(new BulletDetectedEvent(detectedBullet));
             return Option.of(detectedBullet);
+        } else {
+            log.warn("Could not find wave for bullet");
+            MonitoringService.waveForBulletNotFound();
         }
         return Option.none();
     }
@@ -128,7 +141,7 @@ public class BattleStateService {
     private static Option<LxxWave> findWave(List<LxxWave> waves, Bullet bullet, long time) {
         for (LxxWave w : waves) {
             if (Utils.isNear(w.speed, bullet.getVelocity()) && abs(w.launcher.distance(bullet.getX(), bullet.getY()) -
-                    w.getTraveledDistance(time)) < w.speed) {
+                    w.getTraveledDistance(time)) < w.speed * 2.1) {
                 return Option.of(w);
             }
         }
@@ -202,6 +215,9 @@ public class BattleStateService {
         @Override
         public void process(RobotDeathEvent event, BattleState battleState, LxxRobotBuilder myBuilder, LxxRobotBuilder opponentBuilder, TurnDecision lastTurnDecision) {
             opponentBuilder.died();
+            if (battleState.opponent.gunHeat == 0) {
+                opponentBuilder.fire(0.1);
+            }
         }
     }
 

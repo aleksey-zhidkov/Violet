@@ -15,6 +15,7 @@ public final class MonitoringService {
     private static int robotHits;
     private static int wallHits;
     private static WaveDangerInfo surfingDangerInfo;
+    private static int undetectedBullets;
 
     private MonitoringService() {
     }
@@ -39,12 +40,16 @@ public final class MonitoringService {
         MonitoringService.surfingDangerInfo = surfingDangerInfo;
     }
 
+    public static void waveForBulletNotFound() {
+        undetectedBullets++;
+    }
+
     public static String formatData() {
         final StringBuilder builder = new StringBuilder();
 
         builder.append("Wall hits: ").append(wallHits).append('\n');
         builder.append("Robot hits: ").append(robotHits).append('\n');
-
+        builder.append("Undetected bullets: ").append(undetectedBullets).append('\n');
 
         builder.append("\n\nSurfing wave dangerInfo: ").append(surfingDangerInfo).append("\n");
 

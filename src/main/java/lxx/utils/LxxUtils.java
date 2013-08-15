@@ -143,12 +143,17 @@ public final class LxxUtils {
 
 
     public static double getStopDistance(double speed) {
+        assert speed >= 0 && speed <= Rules.MAX_VELOCITY;
+
         double currentSpeed = speed;
         double distance = 0;
         while (currentSpeed > 0) {
             currentSpeed -= Rules.DECELERATION;
-            distance += speed;
+            distance += currentSpeed;
         }
+
+        assert distance <= 6 + 4 + 2;
+
         return distance;
     }
 

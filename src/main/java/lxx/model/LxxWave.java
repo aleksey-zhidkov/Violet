@@ -86,20 +86,22 @@ public class LxxWave implements APoint {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        final LxxWave lxxWave = (LxxWave) o;
+        final LxxWave wave = (LxxWave) o;
 
-        if (time != lxxWave.time) return false;
-        if (launcher != null ? !launcher.equals(lxxWave.launcher) : lxxWave.launcher != null) return false;
-        if (victim != null ? !victim.equals(lxxWave.victim) : lxxWave.victim != null) return false;
+        if (imaginary != wave.imaginary) return false;
+        if (time != wave.time) return false;
+        if (!launcher.equals(wave.launcher)) return false;
+        if (!victim.equals(wave.victim)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = launcher != null ? launcher.hashCode() : 0;
-        result = 31 * result + (victim != null ? victim.hashCode() : 0);
+        int result = launcher.hashCode();
+        result = 31 * result + victim.hashCode();
         result = 31 * result + (int) (time ^ (time >>> 32));
+        result = 31 * result + (imaginary ? 1 : 0);
         return result;
     }
 

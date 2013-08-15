@@ -10,6 +10,7 @@ import lxx.paint.Canvas;
 import lxx.paint.LxxGraphics;
 import lxx.strategy.*;
 import lxx.utils.BattleRules;
+import lxx.utils.Logger;
 import lxx.utils.LxxConstants;
 import lxx.utils.func.F1;
 import lxx.utils.func.LxxCollections;
@@ -34,7 +35,8 @@ public class Violet extends AdvancedRobot {
 
     private static final StaticDataStorage staticDataStorage = new StaticDataStorage();
 
-    private  final scannedRobotEvent scannedRobotEvent = new scannedRobotEvent();
+    private final EventFilter scannedRobotEvent = new EventFilter(ScannedRobotEvent.class);
+    private final EventFilter battleEndedEvent = new EventFilter(BattleEndedEvent.class);
 
     private BattleState battleState;
     private BattleRules rules;
@@ -61,7 +63,7 @@ public class Violet extends AdvancedRobot {
         }
 
         while (battleState.me.alive) {
-
+            Logger.setTurn(getTime());
             doTurn();
 
             setDebugProperty("", MonitoringService.formatData());
@@ -162,6 +164,10 @@ public class Violet extends AdvancedRobot {
 
             MonitoringService.setRobot(battleState.me);
             MonitoringService.setRobot(battleState.opponent);
+
+            if (LxxCollections.find(allEvents, battleEndedEvent).defined()) {
+                System.out.println(MonitoringService.formatData());
+            }
         } catch (RuntimeException t) {
             t.printStackTrace();
             throw t;
@@ -170,9 +176,21 @@ public class Violet extends AdvancedRobot {
 
     @Override
     public void onKeyReleased(KeyEvent e) {
-        for (Canvas c : Canvas.values()) {
-            if (c.getEnableSwitchKey() == e.getKeyChar()) {
-                c.switchEnabled();
+        if (e.getKeyChar() == KeyEvent.VK_5) {
+            Logger.setLevel(Logger.DEBUG_LEVEL);
+        } else if (e.getKeyChar() == KeyEvent.VK_4) {
+            Logger.setLevel(Logger.INFO_LEVEL);
+        } else if (e.getKeyChar() == KeyEvent.VK_3) {
+            Logger.setLevel(Logger.WARN_LEVEL);
+        } else if (e.getKeyChar() == KeyEvent.VK_2) {
+            Logger.setLevel(Logger.ERR_LEVEL);
+        } else if (e.getKeyChar() == KeyEvent.VK_1) {
+            Logger.setLevel(Logger.OFF_LEVEL);
+        } else {
+            for (Canvas c : Canvas.values()) {
+                if (c.getEnableSwitchKey() == e.getKeyChar()) {
+                    c.switchEnabled();
+                }
             }
         }
     }
@@ -197,11 +215,17 @@ public class Violet extends AdvancedRobot {
         }
     }
 
-    private static final class scannedRobotEvent implements F1<Event, Boolean> {
+    private static final class EventFilter<T extends Event> implements F1<Event, Boolean> {
+
+        private final Class<T> clazz;
+
+        private EventFilter(Class<T> clazz) {
+            this.clazz = clazz;
+        }
 
         @Override
         public Boolean f(Event event) {
-            return event instanceof ScannedRobotEvent;
+            return clazz.isAssignableFrom(event.getClass());
         }
     }
 

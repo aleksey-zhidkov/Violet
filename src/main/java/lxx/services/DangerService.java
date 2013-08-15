@@ -85,8 +85,8 @@ public class DangerService implements BulletDetectedEventListener, WaveGoneEvent
 
         double totalDanger = 0;
         double bulletsDanger = 0;
-        final double hiEffectDist = robotWidthInRadians * 0.45;
-        final double lowEffectDist = robotWidthInRadians;
+        final double hiEffectDist = robotWidthInRadians * 0.55;
+        final double lowEffectDist = robotWidthInRadians * 1.05;
         for (ScoredBearingOffset bo : predictedBearingOffsets) {
             totalDanger += bo.score;
 
@@ -97,9 +97,9 @@ public class DangerService implements BulletDetectedEventListener, WaveGoneEvent
             }
             final double dist = abs(bearingOffset - bo.bearingOffset);
             if (dist < hiEffectDist) {
-                bulletsDanger += (1 - (dist / hiEffectDist)) * bo.score;
+                bulletsDanger += bo.score;
             } else if (dist < lowEffectDist) {
-                bulletsDanger += (1 - (dist / lowEffectDist)) * bo.score / 2;
+                bulletsDanger += (1 - (dist / lowEffectDist)) * bo.score;
             }
         }
 
@@ -123,8 +123,9 @@ public class DangerService implements BulletDetectedEventListener, WaveGoneEvent
             }
 
             final double maxDist = entries.get(0).distance + 0.00001;
+            final double minDist = entries.get(entries.size() - 1).distance;
             for (KdTree.Entry<GuessFactor> entry : entries) {
-                final double score = 1 - entry.distance / maxDist;
+                final double score = 1 - (entry.distance - minDist) / (maxDist - minDist);
                 assert score > 0 && score <= 1;
                 final double bearingOffset = entry.value.getBearingOffset(LxxUtils.getMaxEscapeAngle(wave.speed), LxxUtils.lateralDirection(wave, wave.victim));
                 assert bearingOffset >= -LxxConstants.RADIANS_60 &&
@@ -167,7 +168,7 @@ public class DangerService implements BulletDetectedEventListener, WaveGoneEvent
             c.draw(new Line(wave.launcher.project(wave.noBearingOffset, traveledDistance - 10), wave.noBearingOffset, 20), color);
             for (ScoredBearingOffset bo : bos) {
                 c.draw(new Circle(wave.launcher.project(wave.noBearingOffset + bo.bearingOffset, traveledDistance - wave.speed), 2, true),
-                        new Color(255, 255, 255, (int) (255 * bo.score)));
+                        new Color(255, 255, 255, 100 + (int) (155 * bo.score)));
             }
         }
 

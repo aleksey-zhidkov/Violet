@@ -3,6 +3,7 @@ package lxx.movement.orbital;
 import lxx.model.LxxRobot;
 import lxx.model.LxxWave;
 import lxx.movement.MovementDecision;
+import lxx.utils.APoint;
 import lxx.utils.LxxConstants;
 import lxx.utils.LxxPoint;
 import lxx.utils.LxxUtils;
@@ -20,9 +21,9 @@ public class AvoidEnemyOrbitalMovement {
         this.orbitalMovement = orbitalMovement;
     }
 
-    public MovementDecision getMovementDecision(LxxRobot me, LxxWave wave, OrbitDirection direction, LxxRobot enemy) {
+    public MovementDecision getMovementDecision(LxxRobot me, APoint surfPoint, LxxWave wave, OrbitDirection direction, LxxRobot enemy) {
         final double minAttackAngle = getMinAttackAngle(me, enemy, wave);
-        MovementDecision movementDecision = orbitalMovement.getMovementDecision(me, wave, direction, minAttackAngle);
+        MovementDecision movementDecision = orbitalMovement.getMovementDecision(me, surfPoint, direction, minAttackAngle);
 
         if (enemy == null) {
             return movementDecision;
@@ -49,13 +50,14 @@ public class AvoidEnemyOrbitalMovement {
             return RADIANS_90;
         }
 
-        final double distancePart = RADIANS_20 * (1 - limit(0, me.distance(opponent) - 50, orbitalMovement.getDesiredDistance()) / orbitalMovement.getDesiredDistance());
+        final double escapeDistance = orbitalMovement.getDesiredDistance() / 2;
+        final double distancePart = RADIANS_30 * (1 - limit(0, me.distance(opponent) - 50, escapeDistance) / escapeDistance);
 
         final double opponentDirectionPart;
         if (Double.isNaN(opponent.movementDirection)) {
             opponentDirectionPart = 0;
         } else {
-            opponentDirectionPart = RADIANS_20 * (1 - abs(Utils.normalRelativeAngle(opponent.movementDirection - opponent.angleTo(me))) / RADIANS_180);
+            opponentDirectionPart = RADIANS_10 * (1 - abs(Utils.normalRelativeAngle(opponent.movementDirection - opponent.angleTo(me))) / RADIANS_180);
         }
 
         final double wavePart = RADIANS_20 * limit(0, wave.getFlightTime(me) - 10, 30) / 30;

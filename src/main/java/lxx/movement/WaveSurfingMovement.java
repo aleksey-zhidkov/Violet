@@ -12,8 +12,9 @@ import lxx.paint.Square;
 import lxx.services.DangerService;
 import lxx.services.MonitoringService;
 import lxx.services.WaveDangerInfo;
+import lxx.utils.APoint;
 import lxx.utils.LxxPoint;
-import lxx.utils.func.F2;
+import lxx.utils.func.F3;
 import robocode.Rules;
 
 import java.awt.*;
@@ -74,12 +75,11 @@ public class WaveSurfingMovement {
         futurePoints.addAll(predict(firstWave, me, enemy, firstWaveFlightTimeLimit, OrbitDirection.CLOCKWISE, dangerFunction));
         futurePoints.addAll(predict(firstWave, me, enemy, firstWaveFlightTimeLimit, OrbitDirection.COUNTER_CLOCKWISE, dangerFunction));
 
-        Collections.sort(futurePoints, new Comparator<FuturePoint>() {
-            @Override
-            public int compare(FuturePoint o1, FuturePoint o2) {
-                return Double.compare(dangerFunction.f(o1.minDistToEnemy, o1.danger), dangerFunction.f(o2.minDistToEnemy, o2.danger));
-            }
-        });
+        for (FuturePoint fp : futurePoints) {
+            fp.calculateTotalDanger(dangerFunction);
+        }
+
+        Collections.sort(futurePoints);
 
         return futurePoints.get(0);
     }
@@ -94,20 +94,22 @@ public class WaveSurfingMovement {
 
         final List<FuturePoint> points = new ArrayList<FuturePoint>();
         final FuturePoint firstPoint = new FuturePoint(me.position, dangerFunction.waveDangerInfo.getPointDanger(me.position));
-        firstPoint.minDistToEnemy = opponent.alive ? me.distance(opponent) : Integer.MAX_VALUE;
+        firstPoint.minDistToOpponent = opponent.alive ? me.distance(opponent) : Integer.MAX_VALUE;
         points.add(firstPoint);
 
         do {
-            final MovementDecision md = orbitalMovement.getMovementDecision(meImage, wave, orbitDirection, opponentImage);
+            final APoint surfPoint = opponentImage.alive ? opponentImage : wave;
+            final MovementDecision md = orbitalMovement.getMovementDecision(meImage, surfPoint, wave, orbitDirection, opponentImage);
             meImage = new LxxRobot(meImage, md.turnRate, md.desiredVelocity);
             final FuturePoint futurePoint = new FuturePoint(meImage.position, dangerFunction.waveDangerInfo.getPointDanger(meImage.position));
             points.add(futurePoint);
             if (opponentImage.alive) {
                 opponentImage = new LxxRobot(opponentImage, enemyMd.turnRate, enemyMd.desiredVelocity);
                 assert opponentImage.alive;
-                futurePoint.minDistToEnemy = meImage.distance(opponentImage);
+                futurePoint.distanceToOpponent = meImage.distance(opponentImage);
+                futurePoint.minDistToOpponent = futurePoint.distanceToOpponent;
                 for (FuturePoint point : points) {
-                    point.minDistToEnemy = min(point.minDistToEnemy, opponent.alive ? me.distance(opponent) : Integer.MAX_VALUE);
+                    point.minDistToOpponent = min(point.minDistToOpponent, opponent.alive ? me.distance(opponent) : Integer.MAX_VALUE);
                 }
             }
 
@@ -120,7 +122,7 @@ public class WaveSurfingMovement {
         return points;
     }
 
-    private static final class DangerFunction implements F2<Double, Double, Double> {
+    private static final class DangerFunction implements F3<Double, Double, Double, Double> {
 
         private final WaveDangerInfo waveDangerInfo;
 
@@ -129,9 +131,10 @@ public class WaveSurfingMovement {
         }
 
         @Override
-        public Double f(Double minDistToEnemy, Double danger) {
-            final double distDng = getDistDanger(minDistToEnemy);
-            return (danger * 3 + distDng);
+        public Double f(Double distanceToEnemy, Double minDistToEnemy, Double danger) {
+            final double distDng = getDistDanger(distanceToEnemy);
+            final double minDististDng = getDistDanger(minDistToEnemy);
+            return danger * 3 + distDng + minDististDng;
         }
 
         private static double getDistDanger(double distBetween) {
@@ -146,14 +149,27 @@ public class WaveSurfingMovement {
 
     }
 
-    private static final class FuturePoint extends LxxPoint {
+    private static final class FuturePoint extends LxxPoint implements Comparable<FuturePoint> {
 
         public final double danger;
-        public double minDistToEnemy;
 
-        private FuturePoint(LxxPoint pnt, double danger) {
+        public double minDistToOpponent;
+        public double distanceToOpponent;
+
+        public double totalDanger;
+
+        public FuturePoint(LxxPoint pnt, double danger) {
             super(pnt);
             this.danger = danger;
+        }
+
+        public void calculateTotalDanger(DangerFunction dangerFunction) {
+            totalDanger = dangerFunction.f(distanceToOpponent, minDistToOpponent, danger);
+        }
+
+        @Override
+        public int compareTo(FuturePoint o) {
+            return java.lang.Double.compare(totalDanger, o.totalDanger);
         }
     }
 

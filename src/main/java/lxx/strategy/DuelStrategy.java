@@ -7,6 +7,7 @@ import lxx.model.LxxWave;
 import lxx.movement.MovementDecision;
 import lxx.movement.WaveSurfingMovement;
 import lxx.paint.Canvas;
+import lxx.utils.Logger;
 import lxx.utils.LxxConstants;
 import lxx.utils.LxxPoint;
 import lxx.utils.LxxUtils;
@@ -27,7 +28,11 @@ import static robocode.util.Utils.normalRelativeAngle;
 public class DuelStrategy implements Strategy {
 
     public static final int FLIGHT_TIME_THRESHOLD = 2;
+
+    private static final Logger log = Logger.getLogger(DuelStrategy.class);
+
     private final Map<LxxWave, LxxPoint> wavesDestinations = new HashMap<LxxWave, LxxPoint>();
+    private final Map<LxxWave, Object[]> debug = new HashMap<LxxWave, Object[]>();
 
     private final WaveSurfingMovement waveSurfingMovement;
     private final Gun gun;
@@ -36,8 +41,6 @@ public class DuelStrategy implements Strategy {
         this.waveSurfingMovement = waveSurfingMovement;
         this.gun = gun;
     }
-
-
 
     @Override
     public TurnDecision getTurnDecision(BattleState battleState) {
@@ -57,21 +60,32 @@ public class DuelStrategy implements Strategy {
         final LxxWave firstWave = bulletsInAir.get(0);
         if (!wavesDestinations.containsKey(firstWave)) {
             wavesDestinations.put(firstWave, waveSurfingMovement.getMovementDecision(battleState, bulletsInAir, FLIGHT_TIME_THRESHOLD));
+            debug.put(firstWave, new Object[]{battleState, bulletsInAir});
         }
 
         final LxxPoint destination = wavesDestinations.get(firstWave);
 
-        final double desiredHeading = battleState.me.angleTo(destination);
         final double distanceRemaining = battleState.me.distance(destination);
+        final double desiredHeading;
+        final double desiredSpeed;
+        log.debug("Distance remaining: %s, stopDistance: %s", distanceRemaining, LxxUtils.getStopDistance(battleState.me.speed));
         if (distanceRemaining < LxxUtils.getStopDistance(battleState.me.speed) || distanceRemaining < Rules.MAX_VELOCITY) {
-            return new MovementDecision(0, 0);
+            desiredHeading = battleState.opponent.angleTo(battleState.me) + LxxConstants.RADIANS_90;
+            desiredSpeed = 0;
         } else {
-            final boolean wantToGoFront = anglesDiff(battleState.me.heading, desiredHeading) < LxxConstants.RADIANS_90;
-            final double normalizedDesiredHeading = wantToGoFront ? desiredHeading : Utils.normalAbsoluteAngle(desiredHeading + LxxConstants.RADIANS_180);
-
-            final double turnRemaining = normalRelativeAngle(normalizedDesiredHeading - battleState.me.heading);
-            return new MovementDecision(Rules.MAX_VELOCITY * (wantToGoFront ? 1 : -1), turnRemaining);
+            desiredHeading = battleState.me.angleTo(destination);
+            desiredSpeed = Rules.MAX_VELOCITY;
         }
+        final boolean wantToGoFront = anglesDiff(battleState.me.heading, desiredHeading) < LxxConstants.RADIANS_90;
+        final double normalizedDesiredHeading = wantToGoFront ? desiredHeading : Utils.normalAbsoluteAngle(desiredHeading + LxxConstants.RADIANS_180);
+
+        final double turnRemaining = normalRelativeAngle(normalizedDesiredHeading - battleState.me.heading);
+        final double turnRateRadiansLimit = Rules.getTurnRateRadians(battleState.me.speed);
+        final double turnRate = LxxUtils.limit(-turnRateRadiansLimit, turnRemaining, turnRateRadiansLimit);
+        final double speed = battleState.me.project(battleState.me.heading + turnRate, Rules.MAX_VELOCITY * (wantToGoFront ? 1 : -1)).distance(destination) < battleState.me.distance(destination)
+                ? desiredSpeed
+                : 0;
+        return new MovementDecision(speed * (wantToGoFront ? 1 : -1), turnRemaining);
     }
 
     private List<LxxWave> getWaves(BattleState battleState) {
